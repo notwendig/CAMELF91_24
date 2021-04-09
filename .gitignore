@@ -1,2 +1,4 @@
 Debug/
+!Debug/camel_f91_Debug.linkcmd
+!Debug/camel_f91_Debug.make
 Release/

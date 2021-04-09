@@ -88,35 +88,133 @@ ifdef INCLUDED
         DW24 USERAREA.LP	;24
 
 ;Z s0       -- a-addr     end of parameter stack
-    head S0,{"S0"},docon
-        DW24 _S0	;100h
+    head S0,{"S0"},douser
+        DW24 USERAREA.S0	;100h
+
+;X HOLDP	-- a-addr    user HOLDP buffer
+;                         = start of hold area!
+    head HOLDP,{"HOLDP"},douser
+        DW24 USERAREA.HOLDP	;128h
 
 ;X PAD       -- a-addr    user PAD buffer
 ;                         = end of hold area!
-    head PAD,{"PAD"},docon
-        DW24 _PAD	;128h
+    head PAD,{"PAD"},douser
+        DW24 USERAREA.PAD	;128h
 
 ;Z l0       -- a-addr     bottom of Leave stack
-    head L0,{"L0"},docon
-        DW24 _L0	;180h
+    head L0,{"L0"},douser
+        DW24 USERAREA.L0	;180h
 
 ;Z r0       -- a-addr     end of return stack
-    head R00,{"R0"},docon
-        DW24 _R00	;200h
+    head R0,{"R0"},douser
+        DW24 USERAREA.R0	;200h
 
 ;Z uinit    -- addr  initial values for user area
     head UINIT,{"UINIT"},docreate
-        DW24 0,0,10,0     ; reserved,>IN,BASE,STATE
-		DW24 enddict      ; DP
-        DW24 0,0          ; SOURCE init'd elsewhere
-		DW24 lastword     ; LATEST
-        DW24 _PAD-user    ; HP init'd elsewhere
-		DW24 _R00-user
+defuser	.tag USERAREA
+defuser:
+def_U0 			DW24 user		;  0 USER U0        current user area adrs
+def_TOIN 		DW24 0			;  3 USER >IN       holds offset into TIB
+def_BASE		DW24 10			;  6 USER BASE      holds conversion radix
+def_STATE		DW24 0			;  9 USER STATE     holds compiler state
+def_DP			DW24 enddict	; 12 USER DP        holds dictionary ptr
+def_TICKSOURCE 	DW24 0,0		; 15 USER SOURCE    two cells: len, adrs
+def_LATEST		DW24 lastword 	; 21 USER LATEST    last word in dict.
+def_HP			DW24 __HOLDP	; 24 USER HP        HOLD pointer
+def_LP			DW24 __L0		; 28 USER LP        Lreave-stack pointer
+def_S0			DW24 __S0		; 31 Parameter stack, grows down
+def_HOLDP		DW24 __HOLDP	; 34 HOLD grows down
+def_PAD			DW24 __PAD		; 37 PAD buffer grows up
+def_L0         	DW24 __L0		; 40 bottom of Leave stack grows up
+def_R0         	DW24 __R0		; 43 Return stack, grows down
+
 
 ;Z #init    -- n    #bytes of user area init data
     head NINIT,{"#INIT"},docon
         DW24 USERAREASZ
 
+ifdef _DEBUG
+	head MEMCFG,{"MEMCFG"},docolon
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "TIB:       "
+$$      DW24 TYPE
+		DW24 HEX,TIB,DOT,DECIMAL,TIBSIZE,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "U0:        "
+$$      DW24 TYPE
+		DW24 HEX,U0,DUP,DOT,FETCH,DOT
+		
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, ">IN:       "
+$$      DW24 TYPE
+		DW24 HEX,TOIN,DUP,DOT,DECIMAL,FETCH,DOT
+		
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "BASE:      "
+$$      DW24 TYPE
+		DW24 HEX,BASE,DUP,DOT,DECIMAL,FETCH,DOT
+		
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "STATE:     "
+$$      DW24 TYPE
+		DW24 HEX,STATE,DUP,DOT,FETCH,DOT
+		
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "DP:        "
+$$      DW24 TYPE
+		DW24 HEX,DP,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "SOURCE:    "
+$$      DW24 TYPE
+		DW24 HEX,TICKSOURCE,DUP,DOT,TWOFETCH,DOT,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "LATEST:    "
+$$      DW24 TYPE
+		DW24 HEX,LATEST,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "HP:        "
+$$      DW24 TYPE
+		DW24 HEX,HP,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "LP:        "
+$$      DW24 TYPE
+		DW24 HEX,LP,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "S0:        "
+$$      DW24 TYPE
+		DW24 HEX,S0,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "HOLD:      "
+$$      DW24 TYPE
+		DW24 HEX,HOLDP,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "PAD:       "
+$$      DW24 TYPE
+		DW24 HEX,PAD,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "L0:        "
+$$      DW24 TYPE
+		DW24 HEX,L0,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "R0:        "
+$$      DW24 TYPE
+		DW24 HEX,R0,DUP,DOT,FETCH,DOT
+
+		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah
+$$      DW24 TYPE,EXIT
+	
+endif	
 ; ARITHMETIC OPERATORS ==========================
 
 ;C S>D    n -- d          single -> double prec.
@@ -393,7 +491,7 @@ TYP5:   DW24 EXIT
 ;C <#    --             begin numeric conversion
 ;   PAD HP ! ;          (initialize Hold Pointer)
     head LESSNUM,{"<#"},docolon
-        DW24 PAD,HP,STORE,EXIT
+        DW24 HOLDP,FETCH,HP,STORE,EXIT
 
 ;Z >digit   n -- c      convert to 0..9A..Z
 ;   [ HEX ] DUP 9 > 7 AND + 30 + ;
@@ -416,7 +514,7 @@ NUMS1:  DW24 NUM,TWODUP,OR,ZEROEQUAL,QBRANCH,NUMS1
 ;C #>    ud1 -- c-addr u    end conv., get string
 ;   2DROP HP @ PAD OVER - ;
     head NUMGREATER,{"#>"},docolon
-        DW24 TWODROP,HP,FETCH,PAD,OVER,MINUS,EXIT
+        DW24 TWODROP,HP,FETCH,HOLDP,FETCH,OVER,MINUS,EXIT
 
 ;C SIGN  n --           add minus sign if n<0
 ;   0< IF 2D HOLD THEN ;
@@ -677,8 +775,8 @@ INTER9: DW24 DROP,EXIT
 ;   AGAIN ;
     head QUIT,{"QUIT"},docolon
         DW24 INIT_UART
-        DW24 L0,LP,STORE
-        DW24 R00,RPSTORE,LIT,0,STATE,STORE
+        DW24 L0,FETCH,LP,STORE
+        DW24 R0,FETCH,RPSTORE,LIT,0,STATE,STORE
 QUIT1:  DW24 TIB,DUP,TIBSIZE,ACCEPT,SPACE
         DW24 INTERPRET
         DW24 STATE,FETCH,ZEROEQUAL,QBRANCH,QUIT2
@@ -690,7 +788,7 @@ QUIT2:  DW24 BRANCH,QUIT1
 ;C ABORT    i*x --   R: j*x --   clear stk & QUIT
 ;   S0 SP!  QUIT ;
     head ABORT,{"ABORT"},docolon
-        DW24 S0,SPSTORE,QUIT   ; QUIT never returns
+        DW24 S0,FETCH,SPSTORE,QUIT   ; QUIT never returns
 
 ;Z ?ABORT   f c-addr u --      abort & print msg
 ;   ROT IF TYPE ABORT THEN 2DROP ;
@@ -996,8 +1094,8 @@ WDS1:   DW24 DUP,COUNT,TYPE,SPACE,NFATOLFA,FETCH
 ;       SP@ S0 2 - DO I @ U. -2 +LOOP
 ;   THEN ;
     head DOTS,{".S"},docolon
-        DW24 SPFETCH,S0,MINUS,QBRANCH,DOTS2
-        DW24 SPFETCH,S0,CELL,MINUS,XDO
+        DW24 SPFETCH,S0,FETCH,MINUS,QBRANCH,DOTS2
+        DW24 SPFETCH,S0,FETCH,CELL,MINUS,XDO
 DOTS1:  DW24 II,FETCH,UDOT,CELL,NEGATE,XPLUSLOOP,DOTS1
 DOTS2:  DW24 EXIT
 

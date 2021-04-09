@@ -29,6 +29,7 @@
 ;   23 JAN 2004 v1.00e for eZ80F91
 
     .INCLUDE "eZ80F91.INC"    ; CPU Equates
+	.INCLUDE "intvect.inc"
 	.INCLUDE "CAMELF91.INC"
 
 	DEFINE CAMELF91E,SPACE=rom
@@ -65,32 +66,41 @@
 ;
 
     ;ORG     ENTRY   ; program ENTRY POINT
-
+	; void * _set_vector(unsigned int vector, void(*handler)(void));
+	xref _set_vector
+	
 	xdef ENTRY
 ENTRY: ;reset:
 	DI
 	IN0		a,(PD_ALT2)
-	OR		a,03h
+	OR		a,ffh
 	OUT0	(PD_ALT2),a
 	IN0		a,(PD_ALT1)
-	OR		a,~03h
+	OR		a,0
 	OUT0	(PD_ALT1),a
 	IN0		a,(PD_DDR)
-	OR		a,03h
+	OR		a,ffh
 	OUT0	(PD_DDR),a
+	ld		a,0
+	out0	(UART0_IER), a
+	ld		hl,Uart0IRQ
+	push	hl
+	ld		hl,UART0_IVECT
+	push	hl
+	call	_set_vector
 	call	uart0
-	
-	xref user
+
 ; ********************************************************
 ; ** ( initialize registers, and jump to COLD )
-	ld	ix,_R00	; = top of return stack
-	ld	sp,_S0	; = top of param stack
-	ld	iy,user	; = bottom of user area
+	ld	ix,(def_R0)	; = top of return stack
+	ld	sp,(def_S0)	; = top of param stack
+	ld	iy,(def_U0)	; = bottom of user area
 	
-        ld de,1      ; do reset if COLD returns
-        LD  A,0Dh
-        LD  (InpBuffer),A
-        jp COLD      ; enter top-level Forth word2
+    ld de,1      ; do reset if COLD returns
+    LD  A,0Dh
+    LD  (InpBuffer),A
+	EI
+    jp COLD      ; enter top-level Forth word2
 		
 tracelvl:db   0
 
@@ -105,49 +115,147 @@ tracelvl:db   0
     head INIT_UART,{"INIT-UART"},docode
 	call	uart0
 	next
-	
-uart0:	
-	LD      A,83h
-    OUT0    (UART0_LCTL),A  ;enable access to BRG
-    LD      A,LOW(DIVISOR)  ;LSB of BRG divisor
-    OUT0    (UART0_BRG_L),A   ;load low byte of BRG
-	LD      A,HIGH(DIVISOR)  ;MSB of BRG divisor
-    OUT0    (UART0_BRG_H),A   ;load high byte of BRG
-	IN0     A,(UART0_LCTL)
-    AND     A,03h           ;
-    OUT0    (UART0_LCTL),A  ;lock the BRG
-	IN0     A,(UART0_FCTL)
-	OR		A,06h
-	OUT0    (UART0_FCTL),A	;Enable UART Rx/Tx
-	ld		a, 03h
-	out0	(UART0_MCTL), a		; Select activate RTS, DTR
-	ret
 
-;
-; transmit byte in reg C
-;
-	xdef TXMCHR
-TXMCHR:
-$$  IN0     A,(UART0_LSR)   ; check for char waiting..
-    AND     UART_THRE
-    JR      Z,$B
-    LD      A,C
-    OUT0    (UART0_THR),A
-    RET
+Uart0IRQ:	push	af
+			in0		a, (UART0_IER)		; read the UART0 interrupt enable
+			and		a, 0FEh				; receive enable irq is bit 0
+			out0	(UART0_IER), a		; clear the receive interrupt
+			in0		a, (UART0_SPR)		; read the HW flow cntrl setup
+			;see if we are using hardware flow control
+			bit		6, a				; are we using flow control
+			jr		z, $F				; if b6 = 0 no flow control
+			;Implement flow control. b2,b3 have to be in b0, b1
+			;to be copied to the modem line control register
+			rra
+			rra
+			and		a, 03h				; mask the receive disabled bits
+			push	bc
+			ld		b, a				; save the bits we need
+			in0		a, (UART0_MCTL)		; Get RTS, DTR inactivate.
+			and		a, 0FCh				; force lines lows
+			or		a, b				; set desired lines high
+			out0	(UART0_MCTL), a		; Set RTS, DTR to inactivate state.
+			pop		bc
+$$:			pop		af
+			ei
+			reti
+			
+uart0:	
+	; Configure UART0 for 115200,8,1,n. Tx flow DSR, Rx flow DTR, RTS
+			ld		a, C7h
+			out0	(UART0_FCTL), a		; Enable FIFO and clear, int after 14 bytes.
+			ld		a, 80h
+			out0	(UART0_LCTL), a		; Enable access to BRG.
+			ld		a, LOW(DIVISOR)
+			out0	(UART0_BRG_L), a	; Load low byte of BRG.
+			ld		a, HIGH(DIVISOR)
+			out0	(UART0_BRG_H), a	; Load high byte of BRG.
+			ld		a, 03h
+			out0	(UART0_LCTL), a		; Select 8 bits, no parity, 1 stop.
+			ld		a, 03h
+			out0	(UART0_MCTL), a		; Select activate RTS, DTR
+			IN0     A,(UART0_FCTL)
+			OR		A,06h
+			OUT0    (UART0_FCTL),A		; Enable UART Rx/Tx
+			
+			ld		a,11010011b			; D3h. b6 = rx flow, 
+										; set RTS=0 and DTR=0 for no rx (b3, b2)
+										; set RTS=1 and DTR=1 for rx (b1, b0)
+										; b7 = tx flow,
+										; DSR = 0, CTS = 1 for tx allowed (b5, b4)
+			out0	(UART0_SPR), a		; save the settings in the scratch register		
+										; setup for a receive IRQ
+			ld		a, 01h				; receive enable irq is bit 1
+			out0	(UART0_IER), a		; enable the receive interrupt
+			ret
+
 ;
 ; check if character ready to receive
 ;
 RCXRDY:
+if 0
         IN0     A,(UART0_LSR)   ; check for char waiting..
         AND     UART_DR
         RET
+else
+			in0		a, (UART0_LSR)		; Read UART status register of COM Port 0.
+			bit		0, a				; Test character ready bit.
+			jr		z, uart0st1			; If not Zero then character available.
+			or		a, 0FFh				; Set character is available flag.
+			ret							; Done.
+			; no data so enable hardware flow control
+			; receive irq will disable RTS, DTR when fifo full
+uart0st1:	in0		a, (UART0_SPR)	; read HW flow register
+			bit		6, a			; see if we are using flow control
+			jr		z, uart0st3		; if no flow control return status
+			; we are using receive flow control
+			in0		a, (UART0_IER)	; read irq enable register
+			bit		0, a			; Test irq already enabled.
+			jr		nz, uart0st3	; If Z=0 then IRQ enabled.
+			; enable flow control
+			in0		a, (UART0_SPR)	; read flow control settings
+			and		a, 03h			; mask off rx enabled bits
+			push	bc
+			ld      b, a			; save the rx flow bits
+			in0		a, (UART0_MCTL)	; get the modem line settings
+			and		a, 0FCh			; set all rx flow bits low
+			or		a, b			; set required lines high
+			out0	(UART0_MCTL),a	; Set RTS, DTR to rx enabled state
+			pop		bc
+			; setup for a receive IRQ
+			ld		a, 01h			; receive enable irq is bit 1
+			out0	(UART0_IER), a	; enable the receive interrupt
+uart0st3:	xor		a				; Set character not available flag.
+			ret						; Done.
+			
+TMXRDY:		in0		a, (UART0_SPR)	; read flow control bits
+			bit		7, a			; see if we are using flow control
+			jr		nz, uart0ost1	; if zero no tx flow control
+			; we are not using tx flow control, ok to use tx fifo
+			in0		a,(UART0_LSR)	; Read UART status register of COM port 1.
+			bit		5, a			; Test TX Data/shift register Empty ready bit
+			jr		z, uart0ostX	; if bit zero we can not transmit
+			or		a, 0FFh			; indicate we can transmit
+			ret						; return to caller
+			; using tx flow control, do not use tx fifo
+uart0ost1:	in0		a, (UART0_LSR)	; Read UART status register of COM port 1.
+			bit		6, a			; Test TX Data Register Empty ready bit
+uart0ost2:	jr		z, uart0ostX	; if zero nothing can be sent
+			; we are allowed to send if flow control lines allow it
+			push	bc
+			in0		a, (UART0_MSR)	; read current line settings
+			and		a, 30h			; mask off the DSR, CTS (B5, B4)
+			ld		b, a			; save the bits we need to check
+			in0		a, (UART0_SPR)	; get required settings from flow cntrl reg
+			and		a, 30h			; mask off the required tx flow bits
+			ld		c, a			; save the required bits
+			and		a, b			; logical and existing bits with required bits
+			xor		a, c			; compare with required bits
+			pop		bc
+			jr		nz, uart0ostX	; if not the same can not tx
+			or		a, 0FFh			; indicate we can transmit
+			ret						; return to caller
+			; seams like we can send
+uart0ostX:  xor 	a, a
+			ret			
+endif
+		
+;
+; transmit byte in reg C
+;
+	
+TXMCHR:
+	CALL	TMXRDY
+    JR      Z,TXMCHR
+    LD      A,C
+    OUT0    (UART0_THR),A
+    RET
 ;
 ; receive byte into reg A
 ;
 RCXCHR:
-$$  IN0     A,(UART0_LSR)   ; check for char waiting..
-    AND     UART_DR
-    JR      Z,$B
+	CALL	RCXRDY
+    JR      Z,RCXCHR
     IN0     A,(UART0_RBR)
     RET
 
@@ -188,11 +296,11 @@ $$  IN0     A,(UART0_LSR)   ; check for char waiting..
 ; N.B.: DOCOLON must be defined before any
 ; appearance of 'docolon' in a 'word' macro!
 
-docolon:               ; (alternate name)
-enter:  ld (ix-3),de   ; push old IP on ret stack
-        lea	ix,ix-3
-        pop hl         ; param field adrs -> IP
-        nexthl         ; use the faster 'nexthl'
+docolon:               					; (alternate name)
+enter:  lea		ix,ix-3
+        ld 		(ix),de   				; push old IP on ret stack
+        pop 	hl         				; param field adrs -> IP
+        nexthl         					; use the faster 'nexthl'
 
 ;C VARIABLE   --      define a Forth variable
 ;   CREATE 1 CELLS ALLOT ;
@@ -205,38 +313,40 @@ enter:  ld (ix-3),de   ; push old IP on ret stack
 
 docreate:
 dovar:  ; -- a-addr
-        pop hl     ; parameter field address
-        push bc    ; push old TOS
-        ld bc,hl   ; pfa = variable's adrs -> TOS
+        pop 	hl     					; parameter field address
+        push 	bc    					; push old TOS
+        ld 		bc,hl   				; pfa = variable's adrs -> TOS
         next
 
 ;C CONSTANT   n --      define a Forth constant
 ;   CREATE , DOES> (machine code fragment)
     head CONSTANT,{"CONSTANT"},docolon
         DW24 CREATE,COMMA,XDOES
+
 ; DOCON, code action of CONSTANT,
 ; entered by CALL DOCON
 	xdef docon
 docon:  ; -- x
-        pop hl     ; parameter field address
-        push bc    ; push old TOS
-        ld bc,(hl) ; fetch contents of parameter field -> TOS
+        pop 	hl     					; parameter field address
+        push 	bc    					; push old TOS
+        ld 		bc,(hl) 				; fetch contents of parameter field -> TOS
         next
 
 ;Z USER     n --        define user variable "n"
 ;   CREATE , DOES> (machine code fragment)
     head USER,{"USER"},docolon
         DW24 CREATE,COMMA,XDOES
+
 ; DOUSER, code action of USER,
 ; entered by CALL DOUSER
 	xdef douser
 douser:  ; -- a-addr
-        pop hl     ; parameter field address
-        push bc    ; push old TOS
-        ld bc,(hl)  ; fetch contents of parameter field
-        ld hl,iy    ; copy user base address to HL
-        add hl,bc  ;    and add offset
-        ld bc,hl     ; put result in TOS
+        pop 	hl     					; parameter field address
+        push 	bc    					; push old TOS
+        ld 		bc,(hl)  				; fetch contents of parameter field
+        ld 		hl,iy    				; copy user base address to HL
+        add 	hl,bc  					;    and add offset
+        ld 		bc,hl     				; put result in TOS
         next
 
 ; DODOES, code action of DOES> clause
@@ -250,12 +360,12 @@ douser:  ; -- a-addr
 ; (internal code fragment, not a Forth word)
 	xdef dodoes
 dodoes: ; -- a-addr 
-        ld (ix-3),de	; push old IP on ret stk
-		lea	ix,ix-3
-        pop de         ; adrs of new thread -> IP
-        pop hl         ; adrs of parameter field
-        push bc        ; push old TOS onto stack
-        ld bc,hl         ; pfa -> new TOS
+        lea		ix,ix-3
+        ld 		(ix),de					; push old IP on ret stk
+		pop 	de         				; adrs of new thread -> IP
+        pop 	hl         				; adrs of parameter field
+        push 	bc        				; push old TOS onto stack
+        ld 		bc,hl         			; pfa -> new TOS
         next
 
 
@@ -268,68 +378,68 @@ dodoes: ; -- a-addr
 
 ;C KEY?     -- f    return true if char waiting
     head QUERYKEY,{"KEY?"},docode
-        PUSH BC     ;PREPARE FOR NEW TOS
-        CALL RCXRDY
-		ld	bc,0
-        LD C,A      ; RESULT IN TOS
+        PUSH 	BC     					; PREPARE FOR NEW TOS
+        CALL 	RCXRDY
+		ld		bc,0
+        LD 		C,A      				; RESULT IN TOS
         next
 
 ;C KEY      -- c    get character from keyboard
     head KEY,{"KEY"},docode
-        PUSH BC     ;PREPARE FOR NEW TOS
-        CALL RCXCHR
-		ld	bc,0
-        LD C,A      ; RESULT IN TOS
+        PUSH 	BC     					;PREPARE FOR NEW TOS
+        CALL 	RCXCHR
+		ld		bc,0
+        LD 		C,A      				; RESULT IN TOS
         next
 
 
 ;X BYE     i*x --    return to CP/M
     head BYE,{"bye"},docode
         HALT
-        jp 0
+        jp 		0
 
 ; STACK OPERATIONS ==============================
 
 ;C DUP      x -- x x      duplicate top of stack
     head DUP,{"DUP"},docode
-pushtos: push bc
-        next
+pushtos:push 	bc
+     	next
 
 ;C ?DUP     x -- 0 | x x    DUP if nonzero
     head QDUP,{"?DUP"},docode
-		or	a
-		sbc	hl,hl
-		sbc	hl,bc
-        jr nz,pushtos
+		or		a
+		sbc		hl,hl
+		sbc		hl,bc
+        jr 		nz,pushtos
         next
 
 ;C DROP     x --          drop top of stack
     head DROP,{"DROP"},docode
-poptos: pop bc
+poptos: pop 	bc
         next
 
 ;C SWAP     x1 x2 -- x2 x1    swap top two items
     head SWOP,{"SWAP"},docode
-        pop hl
-        push bc
-        ld bc,hl
+        pop 	hl
+        push 	bc
+        ld 		bc,hl
         next
 
 ;C OVER    x1 x2 -- x1 x2 x1   per stack diagram
     head OVER,{"OVER"},docode
-        pop hl
-        push hl
-        push bc
-        ld bc,hl
+        pop 	hl
+        push 	hl
+        push 	bc
+        ld 		bc,hl
         next
 
 ;C ROT    x1 x2 x3 -- x2 x3 x1  per stack diagram
     head ROT,{"ROT"},docode
         ; x3 is in TOS
-        pop hl          ; x2
-        ex (sp),hl      ; x2 on stack, x1 in hl
-        push bc
-        ld bc,hl
+        pop 	hl          			; x2
+        ex 		(sp),hl      			; x2 on stack, x1 in hl
+        push 	bc
+        ld 		bc,hl
         next
 
 ;X NIP    x1 x2 -- x2           per stack diagram
@@ -342,231 +452,224 @@ poptos: pop bc
 
 ;C >R    x --   R: -- x   push to return stack
     head TOR,{">R"},docode
-        ld (ix-3),bc    ; push TOS onto rtn stk
-        lea ix,ix-3
-        pop bc          ; pop new TOS
+        lea 	ix,ix-3
+        ld 		(ix),bc    				; push TOS onto rtn stk
+        pop 	bc          			; pop new TOS
         next
 
 ;C R>    -- x    R: x --   pop from return stack
     head RFROM,{"R>"},docode
-        push bc         ; push old TOS
-        ld bc,(ix)     ; pop top rtn stk item
-        lea ix,ix+3    ;       to TOS
+        push 	bc         				; push old TOS
+        ld 		bc,(ix)     			; pop top rtn stk item
+        lea 	ix,ix+3    				;  to TOS
         next
 
 ;C R@    -- x     R: x -- x   fetch from rtn stk
     head RFETCH,{"R@"},docode
-        push bc         ; push old TOS
-        ld bc,(ix)     ; fetch top rtn stk item to TOS
+        push 	bc         				; push old TOS
+        ld 		bc,(ix)     			; fetch top rtn stk item to TOS
         next
 
 ;Z SP@  -- a-addr       get data stack pointer
     head SPFETCH,{"SP@"},docode
-        push bc
-		or	a
-        sbc	hl,hl
-        add hl,sp
-        ld bc,hl
+        push 	bc
+		or		a
+        sbc		hl,hl
+        add 	hl,sp
+        ld 		bc,hl
         next
 
 ;Z SP!  a-addr --       set data stack pointer
     head SPSTORE,{"SP!"},docode
-        ld hl,bc
-        ld sp,hl
-        pop bc          ; get new TOS
+        ld 		hl,bc
+        ld 		sp,hl
+        pop 	bc          			; get new TOS
         next
 
 ;Z RP@  -- a-addr       get return stack pointer
     head RPFETCH,{"RP@"},docode
-        push bc
-        push ix
-        pop bc
+        push 	bc
+        push 	ix
+        pop 	bc
         next
 
 ;Z RP!  a-addr --       set return stack pointer
     head RPSTORE,{"RP!"},docode
-        push bc
-        pop ix
-        pop bc
+        push 	bc
+        pop 	ix
+        pop 	bc
         next
 
 ; MEMORY AND I/O OPERATIONS =====================
 
 ;C !        x a-addr --   store cell in memory
     head STORE,{"!"},docode
-        ld hl,bc          ; address in hl
-        pop bc          ; data in bc
-        ld (hl),bc
-        pop bc          ; pop new TOS
+        ld 		hl,bc          		; address in hl
+        pop 	bc         			; data in bc
+        ld		(hl),bc
+        pop 	bc          		; pop new TOS
         next
 
 ;C C!      char c-addr --    store char in memory
     head CSTORE,{"C!"},docode
-        ld hl,bc          ; address in hl
-        pop bc          ; data in bc
-        ld (hl),c
-        pop bc          ; pop new TOS
+        ld 		hl,bc          		; address in hl
+        pop 	bc          		; data in bc
+        ld 		(hl),c
+        pop 	bc          		; pop new TOS
         next
 
 ;C @       a-addr -- x   fetch cell from memory
     head FETCH,{"@"},docode
-        ld hl,bc          ; address in hl
-        ld bc,(hl)
+        ld 		hl,bc          		; address in hl
+        ld 		bc,(hl)
         next
 
 ;C C@     c-addr -- char   fetch char from memory
     head CFETCH,{"C@"},docode
-        ld a,(bc)
-		ld	bc,0
-        ld c,a
+        ld 		a,(bc)
+		ld		bc,0
+        ld 		c,a
         next
 
 ; ---------- PORT I/O Commands
 
- ;C  P!  ( n p -- ) write byte n to i/o port p
-
+;C  P!  ( n p -- ) write byte n to i/o port p
     head PSTORE,{"P!"},docode
-        POP     HL
-        OUT     (BC),L
-        POP     BC      ; get new TOS
-        next
-		
-;C P@   ( p -- n )  read byte n from i/o port p
+    	jr		PCSTORE
 
+;C P@   ( p -- n )  read byte n from i/o port p
     head PFETCH,{"P@"},docode
-        IN A,(C)        ;simple stuff...
-        LD BC,0
-		ld	c,a
-        next
-		
+    	jr		PCFETCH
 
 ;Z PC!     char c-addr --    output char to port
     head PCSTORE,{"PC!"},docode
-        pop hl          ; char in L
-        out (bc),l       ; to port (BC)
-        pop bc          ; pop new TOS
+       	pop 	hl          			; char in L
+        out 	(bc),l       			; to port (BC)
+        pop 	bc          			; pop new TOS
         next
-
-;Z P0C!    char c-addr --    output char to port0
-    head P0CSTORE,{"P0C!"},docode	
-		ld	hl,C90009h			; 
-		ld  h,c
-		pop	bc			; 09 c-addr, C9
-		push hl
-		ld	hl,ED0000h
-		push hl			; 00 00 ED
-		or	a
-		sbc	hl,hl
-		add	hl,sp
-		inc	hl
-		inc	hl			; HL=> ED 09 c-addr C9 / OUT0 (c-addr),C RET
-		call $F
-		pop	hl
-		pop	hl
-		pop	bc
-		next
-$$:		jp	(hl)	
 	
 ;Z PC@     c-addr -- char   input char from port
     head PCFETCH,{"PC@"},docode
-        in a,(bc)        ; read port (BC) to C
-		ld bc,0
-        ld c,a
+        in 		a,(bc)        			; read port (BC) to C
+		ld 		bc,0
+        ld 		c,a
         next
-		
-;Z P0C@    c-addr -- char   input char from port0		
-    head P0CFETCH,{"P0C@"},docode	
-		ld	hl,C90008h			; 
-		ld  h,c
-		push hl
-		ld	hl,ED0000h
-		push hl			; 00 00 ED
-		or	a
-		sbc	hl,hl
-		add	hl,sp
-		inc	hl
-		inc	hl			; HL=> ED 08 c-addr C9 / IN0 C,(c-addr) RET
-		call $F
-		pop	hl
-		pop	hl
+
+; ---------- eZ80 internal pherfery I/O Commands
+
+;Z P0!    char c-addr --    output byte to port0
+    head P0STORE,{"P0!"},docode
+		ld		hl,C90009h
+		ld  	h,c
+		pop		bc						; 09 c-addr, C9
+		push 	hl
+		ld		hl,ED0000h
+		push 	hl						; 00 00 ED
+		or		a
+		sbc		hl,hl
+		add		hl,sp
+		inc		hl
+		inc		hl						; HL=> ED 09 c-addr C9 / OUT0 (c-addr),C RET
+		call 	$F
+		pop		hl
+		pop		hl
+		pop		bc
 		next
-$$:		jp	(hl)	
+$$:		jp		(hl)
+		
+;Z P0C@    c-addr -- char   input byte from port0
+    head P0FETCH,{"P0@"},docode
+		ld		hl,C90008h
+		ld  	h,c
+		push 	hl
+		ld		hl,ED0000h
+		push 	hl						; 00 00 ED
+		or		a
+		sbc		hl,hl
+		add		hl,sp
+		inc		hl
+		inc		hl						; HL=> ED 08 c-addr C9 / IN0 C,(c-addr) RET
+		call 	$F
+		pop		hl
+		pop		hl
+		next
+$$:		jp		(hl)
 
 ; ARITHMETIC AND LOGICAL OPERATIONS =============
 
 ;C +       n1/u1 n2/u2 -- n3/u3     add n1+n2
     head PLUS,{"+"},docode
-        pop hl
-        add hl,bc
-        ld bc,hl
+        pop 	hl
+        add 	hl,bc
+        ld 		bc,hl
         next
 
 ;X M+       d n -- d         add single to double
     head MPLUS,{"M+"},docode
-        ex de,hl
-        pop de          ; hi cell
-        ex (sp),hl      ; lo cell, save IP
-        add hl,bc
-        ld bc,de        ; hi result in BC (TOS)
-        jr nc,mplus1
-        inc bc
-mplus1: pop de          ; restore saved IP
-        push hl         ; push lo result
+        ex 		de,hl
+        pop 	de          			; hi cell
+        ex 		(sp),hl      			; lo cell, save IP
+        add 	hl,bc
+        ld 		bc,de        			; hi result in BC (TOS)
+        jr 		nc,mplus1
+        inc 	bc
+mplus1: pop 	de          			; restore saved IP
+        push 	hl        	 			; push lo result
         next
 
 ;C -      n1/u1 n2/u2 -- n3/u3    subtract n1-n2
     head MINUS,{"-"},docode
-        pop hl
-        or a
-        sbc hl,bc
-        ld bc,hl
+        pop 	hl
+        or 		a
+        sbc 	hl,bc
+        ld 		bc,hl
         next
 
 ;C AND    x1 x2 -- x3            logical AND
     head AND,{"AND"},docode
-		push bc
-		push ix
-		ld	ix,0
-		add	ix,sp
-		ld	a,(ix+3)
-		and	a,(ix+6)
-		ld	(ix+6),a
-		ld	a,(ix+4)
-		and	a,(ix+7)
-		ld	(ix+7),a
-		ld	a,(ix+5)
-		and	a,(ix+8)
-		ld	(ix+8),a
-		pop	ix
-		pop	bc
-		pop bc
+		push 	bc
+		push 	ix
+		ld		ix,0
+		add		ix,sp
+		ld		a,(ix+3)
+		and		a,(ix+6)
+		ld		(ix+6),a
+		ld		a,(ix+4)
+		and		a,(ix+7)
+		ld		(ix+7),a
+		ld		a,(ix+5)
+		and		a,(ix+8)
+		ld		(ix+8),a
+		pop		ix
+		pop		bc
+		pop 	bc
 		next
 
 ;C OR     x1 x2 -- x3           logical OR
     head OR,{"OR"},docode
-        push bc
-		push ix
-		ld	ix,0
-		add	ix,sp
-		ld	a,(ix+3)
-		or	a,(ix+6)
-		ld	(ix+6),a
-		ld	a,(ix+4)
-		or	a,(ix+7)
-		ld	(ix+7),a
-		ld	a,(ix+5)
-		or	a,(ix+8)
-		ld	(ix+8),a
-		pop	ix
-		pop	bc
-		pop bc
+        push 	bc
+		push 	ix
+		ld		ix,0
+		add		ix,sp
+		ld		a,(ix+3)
+		or		a,(ix+6)
+		ld		(ix+6),a
+		ld		a,(ix+4)
+		or		a,(ix+7)
+		ld		(ix+7),a
+		ld		a,(ix+5)
+		or		a,(ix+8)
+		ld		(ix+8),a
+		pop		ix
+		pop		bc
+		pop 	bc
 		next
 
 ;C XOR    x1 x2 -- x3            logical XOR
     head XOR,{"XOR"},docode
-        push bc
-		push ix
-		ld	ix,0
+        push 	bc
+		push 	ix
+		ld		ix,0
 		add	ix,sp
 		ld	a,(ix+3)
 		xor	a,(ix+6)
@@ -1165,26 +1268,35 @@ enddict		DS	3			    ; user's code starts here
 user	.tag	USERAREA
 user:	
 ifdef _DEBUG
-_U0 		DS	3		;  0 USER U0        current user area adrs
-_TOIN 		DS	3		;  3 USER >IN       holds offset into TIB
-_BASE		DS	3		;  6 USER BASE      holds conversion radix
-_STATE		DS	3		;  9 USER STATE     holds compiler state
-_DP			DS	3		; 12 USER DP        holds dictionary ptr
-_TICKSOURCE	DS	6		; 15 USER SOURCE    two cells: len, adrs
-_LATEST		DS	3		; 21 USER LATEST    last word in dict.
-_HP			DS	3		; 24 USER HP        HOLD pointer
-_LP			DS	3		; 28 USER LP        Leave-stack pointer
+dbg_U0 			DS	3		;  0 USER U0        current user area adrs
+dbg_TOIN 		DS	3		;  3 USER >IN       holds offset into TIB
+dbg_BASE		DS	3		;  6 USER BASE      holds conversion radix
+dbg_STATE		DS	3		;  9 USER STATE     holds compiler state
+dbg_DP			DS	3		; 12 USER DP        holds dictionary ptr
+dbg_TICKSOURCE	DS	6		; 15 USER SOURCE    two cells: len, adrs
+dbg_LATEST		DS	3		; 21 USER LATEST    last word in dict.
+dbg_HP			DS	3		; 24 USER HP        HOLD pointer
+dbg_LP			DS	3		; 28 USER LP        Leave-stack pointer
+dbg_S0			DS	3		; 31 Parameter stack, grows down
+dbg_HOLDP		DS  3		; 34 HOLD grows down
+dbg_PAD			DS  3		; 37 PAD buffer grows up
+dbg_L0         	DS  3		; 40 bottom of Leave stack grows up
+dbg_R0         	DS  3		; 43 Return stack, grows down
 else
 		ds USERAREASZ
 endif		
 
 			DS	PARASTACKSZ	;128
-_S0					; Parameter stack, 128B, grows down
+__S0		; Parameter stack, 128B, grows down
+
 			DS	HOLDSTACKSZ	;40
-_HOLD				; HOLD area, 40 bytes, grows down
-_PAD		DS	PADBUFFERSZ	; PAD buffer, 88 bytes
-_L0			DS	LEAVESTACKSZ; 97 bottom of Leave stack grows up
+__HOLDP		; HOLD area, 40 bytes, grows down
+
+__PAD		DS	PADBUFFERSZ	; PAD buffer, 88 bytes
+
+__L0		DS	LEAVESTACKSZ; 97 bottom of Leave stack grows up
+
 			DS  RETNSTACKSZ	; 128
-_R00						; Return stack, 128 B, grows down
+__R0		; Return stack, 128 B, grows down
 
         END     ;ENTRY

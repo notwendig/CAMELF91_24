@@ -53,6 +53,11 @@ TICKSOURCE 	DS	6		; 15 USER SOURCE    two cells: len, adrs
 LATEST		DS	3		; 21 USER LATEST    last word in dict.
 HP			DS	3		; 24 USER HP        HOLD pointer
 LP			DS	3		; 28 USER LP        Lreave-stack pointer
+S0			DS	3		; 31 Parameter stack, grows down
+HOLDP		DS  3		; 34 HOLD grows down
+PAD			DS  3		; 37 PAD buffer grows up
+L0         	DS  3		; 40 bottom of Leave stack grows up
+R0         	DS  3		; 43 Return stack, grows down
 USERAREASZ 	ENDSTRUCT USERAREA
 
 PARASTACKSZ	EQU	256		;128
