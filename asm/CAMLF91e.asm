@@ -1,7 +1,7 @@
 ; CAMLF91e.S: Code Primitives
 ;   Source code is for the Zilog Macro Assembler.
 ;   Forth words are documented as follows:
-;x   NAME     stack -- stack    description
+;   NAME     instack -- outstack    description
 ;   where x=C for ANS Forth Core words, X for ANS
 ;   Extensions, Z for internal or private words.
 ;
@@ -27,6 +27,7 @@
 ;   25 SEP 2001 PORTED TO eZ80 by D. Beattie Jr.
 ;   12 MAY 2003 v1.10e for eZ80 Acclaim, ZDS II (ZiLOG) XTools
 ;   23 JAN 2004 v1.00e for eZ80F91
+;	01 APR 2021 v1.00e-24bit for eZ80F91 JSievers@NadiSoft.de
 
     .INCLUDE "eZ80F91.INC"    ; CPU Equates
 	.INCLUDE "intvect.inc"
@@ -266,7 +267,6 @@ RCXCHR:
     head EXIT,{"EXIT"},docode
 		ld	de,(ix)    ; pop old IP from ret stk
         lea ix,ix+3
-		tracex
         next
 
 ;Z lit      -- x    fetch inline literal to stack

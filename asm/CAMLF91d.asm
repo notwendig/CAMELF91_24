@@ -141,7 +141,5 @@ noop:   next
         jp STORE
 
 else
-	ifdef _DEBUG
-		ds 1	; makes the relist happy
-	endif
+	ds 1	; makes the relist happy
 endif ;INCLUDED

@@ -133,88 +133,88 @@ def_R0         	DW24 __R0		; 43 Return stack, grows down
     head NINIT,{"#INIT"},docon
         DW24 USERAREASZ
 
-ifdef _DEBUG
+;ifdef _DEBUG
 	head MEMCFG,{"MEMCFG"},docolon
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "TIB:       "
 $$      DW24 TYPE
-		DW24 HEX,TIB,DOT,DECIMAL,TIBSIZE,DOT
+		DW24 HEX,TIB,UDOT,DECIMAL,TIBSIZE,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "U0:        "
 $$      DW24 TYPE
-		DW24 HEX,U0,DUP,DOT,FETCH,DOT
+		DW24 HEX,U0,DUP,UDOT,FETCH,UDOT
 		
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, ">IN:       "
 $$      DW24 TYPE
-		DW24 HEX,TOIN,DUP,DOT,DECIMAL,FETCH,DOT
+		DW24 HEX,TOIN,DUP,UDOT,DECIMAL,FETCH,UDOT
 		
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "BASE:      "
 $$      DW24 TYPE
-		DW24 HEX,BASE,DUP,DOT,DECIMAL,FETCH,DOT
+		DW24 HEX,BASE,DUP,UDOT,DECIMAL,FETCH,UDOT
 		
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "STATE:     "
 $$      DW24 TYPE
-		DW24 HEX,STATE,DUP,DOT,FETCH,DOT
+		DW24 HEX,STATE,DUP,UDOT,FETCH,UDOT
 		
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "DP:        "
 $$      DW24 TYPE
-		DW24 HEX,DP,DUP,DOT,FETCH,DOT
+		DW24 HEX,DP,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "SOURCE:    "
 $$      DW24 TYPE
-		DW24 HEX,TICKSOURCE,DUP,DOT,TWOFETCH,DOT,DOT
+		DW24 HEX,TICKSOURCE,DUP,UDOT,TWOFETCH,UDOT,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "LATEST:    "
 $$      DW24 TYPE
-		DW24 HEX,LATEST,DUP,DOT,FETCH,DOT
+		DW24 HEX,LATEST,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "HP:        "
 $$      DW24 TYPE
-		DW24 HEX,HP,DUP,DOT,FETCH,DOT
+		DW24 HEX,HP,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "LP:        "
 $$      DW24 TYPE
-		DW24 HEX,LP,DUP,DOT,FETCH,DOT
+		DW24 HEX,LP,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "S0:        "
 $$      DW24 TYPE
-		DW24 HEX,S0,DUP,DOT,FETCH,DOT
+		DW24 HEX,S0,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "HOLD:      "
 $$      DW24 TYPE
-		DW24 HEX,HOLDP,DUP,DOT,FETCH,DOT
+		DW24 HEX,HOLDP,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "PAD:       "
 $$      DW24 TYPE
-		DW24 HEX,PAD,DUP,DOT,FETCH,DOT
+		DW24 HEX,PAD,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "L0:        "
 $$      DW24 TYPE
-		DW24 HEX,L0,DUP,DOT,FETCH,DOT
+		DW24 HEX,L0,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah, "R0:        "
 $$      DW24 TYPE
-		DW24 HEX,R0,DUP,DOT,FETCH,DOT
+		DW24 HEX,R0,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah
 $$      DW24 TYPE,EXIT
-	
-endif	
+;endif	
+
 ; ARITHMETIC OPERATORS ==========================
 
 ;C S>D    n -- d          single -> double prec.
@@ -1111,8 +1111,10 @@ DOTS2:  DW24 EXIT
 ;       DW24 LIT,0398h,TMR1_INIT      ;turn on 1-msec timer
         DW24 XSQUOTE      ; sign-on banner to console
         DB $F-$-1,0Dh,0Ah,0Dh,0Ah
-        DB "eZ80F91 Camel FORTH v1.00a (24-bit), 1 APR 2021",0Dh,0Ah
-$$      DW24 TYPE,ABORT       ; ABORT never returns
+        DB "eZ80F91 Camel FORTH "
+        VERSION
+        DB ", 1 APR 2021",0Dh,0Ah
+$$:     DW24 TYPE,ABORT       ; ABORT never returns
 
 ;
 ;  D.R  dword nlen --       print dword in field nlen long
@@ -1164,8 +1166,6 @@ DUMP7   DW24      EMIT
         DW24      CR,EXIT
 
 else
-	ifdef _DEBUG
-		ds 1	; makes the relist happy
-	endif
+	ds 1	; makes the relist happy
 endif ;INCLUDED
 	END
