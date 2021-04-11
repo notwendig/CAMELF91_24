@@ -12,7 +12,7 @@
    </Clock>
    <ControlReg>
       <pc>000000</pc>
-      <splStackPtr>C00000</splStackPtr>
+      <splStackPtr>0</splStackPtr>
       <spsStackPtr>0</spsStackPtr>
       <useAdlMode>true</useAdlMode>
    </ControlReg>
@@ -39,10 +39,10 @@
             <busMode>0</busMode>
             <controlRegister>0</controlRegister>
             <lower>0</lower>
-            <upper>0</upper>
+            <upper>7</upper>
          </CS1>
          <CS2>
-            <busMode>0</busMode>
+            <busMode>81</busMode>
             <controlRegister>28</controlRegister>
             <lower>80</lower>
             <upper>BF</upper>

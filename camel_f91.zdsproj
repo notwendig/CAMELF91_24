@@ -1,4 +1,4 @@
-<project type="Executable" project-type="Standard" configuration="Release" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
+<project type="Executable" project-type="Standard" configuration="Debug" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
 <cpu>EZ80F91</cpu>
 
 <!-- file information -->
@@ -125,7 +125,7 @@ DEFINE __len_code = length of CODE</option>
 <option name="useadddirectives" type="boolean" change-action="build">true</option>
 <option name="linkconfig" type="string" change-action="build">Standard</option>
 <option name="flashinfo" type="string" change-action="build">0-FF</option>
-<option name="ram" type="string" change-action="build">040000-07FFFF</option>
+<option name="ram" type="string" change-action="build">B7D000-BFFFFF</option>
 <option name="rom" type="string" change-action="build">000000-03FFFF</option>
 <option name="extio" type="string" change-action="build">0-FFFF</option>
 <option name="intio" type="string" change-action="build">0-FF</option>
@@ -193,9 +193,9 @@ DEFINE __len_code = length of CODE</option>
 <option name="includeserial" type="boolean" change-action="none">false</option>
 <option name="offset" type="integer" change-action="none">0</option>
 <option name="snenable" type="boolean" change-action="none">false</option>
-<option name="sn" type="string" change-action="none">0</option>
-<option name="snsize" type="integer" change-action="none">0</option>
-<option name="snstep" type="integer" change-action="none">0</option>
+<option name="sn" type="string" change-action="none">000000000000000000000000</option>
+<option name="snsize" type="integer" change-action="none">1</option>
+<option name="snstep" type="integer" change-action="none">000000000000000000000000</option>
 <option name="snstepformat" type="integer" change-action="none">0</option>
 <option name="snaddress" type="string" change-action="none">0</option>
 <option name="snformat" type="integer" change-action="none">0</option>
@@ -284,6 +284,13 @@ DEFINE __len_code = length of CODE</option>
 
 <!-- breakpoint information -->
 <breakpoints>
+<breakpoint temporary="false" enabled="true" >
+<line-number>100</line-number>
+<pathname>Z:\workspace\CAMLF91\asm\CAMLF91e.asm</pathname>
+<address>0</address>
+<command></command>
+<preserve-type>0</preserve-type>
+</breakpoint>
 </breakpoints>
 
 </project>

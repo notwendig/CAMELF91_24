@@ -58,8 +58,8 @@
          <mapFlashToPage>0</mapFlashToPage>
          <mapRamToPage>b7</mapRamToPage>
          <useFlashRam>false</useFlashRam>
-         <useInternalDataRam>false</useInternalDataRam>
-         <useMaccRam>false</useMaccRam>
+         <useInternalDataRam>true</useInternalDataRam>
+         <useMaccRam>true</useMaccRam>
       </Internal>
       <waitStates>3</waitStates>
    </Memory>

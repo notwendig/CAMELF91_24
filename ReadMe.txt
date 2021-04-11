@@ -1,5 +1,7 @@
 
 First step, Camel 24bit Forth for the eZ80 Acclaim! eZ80F91 -- have fun!
+    www.NadiSoft.de <JSievers@NadiSoft.de>
+
 This port originated from the web pages of Douglas Beattie Jr.
  http://www.hytherion.com/beattidp/
 
@@ -7,7 +9,7 @@ This port originated from the web pages of Douglas Beattie Jr.
 About this port of Camel Forth:
 
 This is a ZDSII_eZ80Acclaim!_5.3.4 project, which contains two separate builds:
-Seehttps://www.zilog.com zds2_eZ80Acclaim!_5.3.4_19112104.zip
+See https://www.zilog.com zds2_eZ80Acclaim!_5.3.4_19112104.zip
 These projects are configured to build for the eZ80F91 Development Board
 Revision 99C0858-001 Rev C or later.
 
@@ -17,7 +19,7 @@ Revision 99C0858-001 Rev C or later.
 
  - The other is 'Release', which generates a HEX file, to burn into
    the eZ80F91 on-chip Flash with the Flash Loader (found in the Tools
-   menu of ZDS II). ROM 000000h-03FFFFh and RAM FFD000-FFFFFFh.
+   menu of ZDS II). ROM 000000h-03FFFFh and RAM B7D000-B7FFFFh.
 
 Select the build using 'Set Active Configuration' from the 'Build' menu,
 or from the toolbar.

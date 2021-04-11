@@ -102,8 +102,7 @@ ENTRY: ;reset:
     LD  (InpBuffer),A
 	EI
     jp COLD      ; enter top-level Forth word2
-		
-tracelvl:db   0
+
 
 ;Z debug break  --    
     head dbg,{"DBG"},docode
@@ -892,10 +891,10 @@ dobranch:ex de,hl
 ; '83 and ANSI standard loops terminate when the
 ; boundary of limit-1 and limit is crossed, in
 ; either direction.  This can be conveniently
-; implemented by making the limit 8000h, so that
+; implemented by making the limit 800000h, so that
 ; arithmetic overflow logic can detect crossing.
 ; I learned this trick from Laxen & Perry F83.
-; fudge factor = 8000h-limit, to be added to
+; fudge factor = 800000h-limit, to be added to
 ; the start value.
     head XDO,{"(do)"},docode
         ex de,hl
@@ -903,7 +902,7 @@ dobranch:ex de,hl
         ex de,hl
         ld hl,800000h
         or a
-        sbc hl,de    ; 8000-limit in HL
+        sbc hl,de    ; 800000-limit in HL
         ld (ix-3),hl  ;push this fudge factor onto return stack
 		add hl,bc    ; add fudge to start value
         ld (ix-6),hl  ;  push adjusted start value onto return stack
@@ -921,7 +920,7 @@ dobranch:ex de,hl
     head XLOOP,{"(loop)"},docode
         exx
         ld bc,1
-looptst: ld hl,(ix)  ; get the loop index
+looptst:ld hl,(ix)  ; get the loop index
         or a
         adc hl,bc    ; increment w/overflow test
         jp pe,loopterm  ; overflow=loop done
@@ -1259,12 +1258,7 @@ lastword EQU link       ; nfa of last word in dict.
 
 	segment bss
 
-InpBuffer 	DS 128 		;BLKB 128
-enddict		DS	3			    ; user's code starts here	
-	
-	DEFINE FBSS,SPACE=RAM,ORG=USERSEGMENT
-	SEGMENT FBSS
-	
+InpBuffer 	DS 128 
 user	.tag	USERAREA
 user:	
 ifdef _DEBUG
@@ -1284,7 +1278,10 @@ dbg_L0         	DS  3		; 40 bottom of Leave stack grows up
 dbg_R0         	DS  3		; 43 Return stack, grows down
 else
 		ds USERAREASZ
-endif		
+endif
+enddict		DS	3			    ; user's code starts here	
+	
+	ORG USERSEGMENT
 
 			DS	PARASTACKSZ	;128
 __S0		; Parameter stack, 128B, grows down
