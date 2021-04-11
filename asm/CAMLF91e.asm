@@ -93,11 +93,14 @@ ENTRY: ;reset:
 
 ; ********************************************************
 ; ** ( initialize registers, and jump to COLD )
-	ld	ix,(def_R0)	; = top of return stack
-	ld	sp,(def_S0)	; = top of param stack
-	ld	iy,(def_U0)	; = bottom of user area
-	
-    ld de,1      ; do reset if COLD returns
+    ld	iy,defuser
+	WITH USERAREA
+	ld	ix,(iy+R0)	; = top of return stack
+	ld	hl,(iy+S0)	; = top of param stack
+	ld	iy,(iy+U0)	; = bottom of user area
+	ENDWITH
+	ld	sp,hl
+    ld 	de,1      ; do reset if COLD returns
     LD  A,0Dh
     LD  (InpBuffer),A
 	EI
