@@ -453,15 +453,13 @@ poptos: pop 	bc
 ;Z RP@  -- a-addr       get return stack pointer
     head RPFETCH,{"RP@"},docode
         push 	bc
-        push 	ix
-        pop 	bc
+		ld		bc,ix
         next
 
 ;Z RP!  a-addr --       set return stack pointer
     head RPSTORE,{"RP!"},docode
-        push 	bc
-        pop 	ix
-        pop 	bc
+		ld		ix,bc
+		pop		bc
         next
 
 ; MEMORY AND I/O OPERATIONS =====================
@@ -744,8 +742,7 @@ rsh2:   djnz rsh1
 
 ;C +!     n/u a-addr --       add cell to memory
     head PLUSSTORE,{"+!"},docode
-		push bc
-		pop hl		; a-addr
+		ld hl,bc		; a-addr
 		pop	bc		; n/u
 		push de
         ld de,(hl)	; (mem)
@@ -1176,8 +1173,7 @@ snext:  next
         LD  A,00h
         POP HL      ;set source address (src)
         PUSH DE     ; save IP (Instruction Pointer)
-        LD  E,C     ;TOS into DE (dst)
-        LD  D,B
+        LD  DE,BC     ;TOS into DE (dst)
         LD  BC,256  ;set count
         LD  A,0AAh ; .....
         LD  (5555h),A  ;write-enable algorithm
@@ -1194,8 +1190,7 @@ snext:  next
         JR  NZ,$B   ;  internal write
         INC HL      ; bump forward again
         INC DE      ;bump forward again
-        LD  C,E     ;DE (dst) to TOS
-        LD  B,D
+        LD  BC,DE     ;DE (dst) to TOS
         POP DE     ; restore IP (Instruction Pointer)
         PUSH HL    ; set 2nd stack item (src)
         next

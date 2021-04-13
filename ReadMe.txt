@@ -59,7 +59,7 @@ PAD:       B7D1A4 C7FE27
 L0:        B7D1A7 C7FE7F
 R0:        B7D1AA C7FFFF
 
- - The 3trh is 'Chipony', which generates a HEX file, to burn into
+ - The 3th is 'Chiponly', which generates a HEX file, to burn into
    the eZ80F91 on-chip Flash with the Flash Loader (found in the Tools
    menu of ZDS II). Chip's Flash 000000h-03FFFFh and SRAM B7D000-B7FFFFh.
 
@@ -91,9 +91,9 @@ If you plan to embed this into a commercial product (for manufacturing test,
 in-lab use, field diagnostics, etc.), please contact the author for a
 very reasonable licensing deal, e.g. per board, or unlimited distribution.
 
-The Author:  Bradford J. Rodriguez, Ph.D. -- http://www.zetetics.com/bj/
-Port to 24Bit 1.4.2021 by: Jürgen Willi Sievers, http://NadiSoft.de
 
+Port to 24Bit 1.4.2021 by: Jürgen Willi Sievers, http://NadiSoft.de
+The Author of 16bit port:  Bradford J. Rodriguez, Ph.D. -- http://www.zetetics.com/bj/
 
 CamelForth is NOT freeware. All rights are reserved.
 

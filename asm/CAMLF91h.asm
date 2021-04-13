@@ -211,6 +211,11 @@ $$      DW24 TYPE
 		DW24 HEX,R0,DUP,UDOT,FETCH,UDOT
 
 		DW24 XSQUOTE
+        DB $F-$-1,0Dh,0Ah, "Bytes free:"
+$$      DW24 TYPE
+		DW24 SPFETCH,DP,FETCH,MINUS,DECIMAL,UDOT
+		
+		DW24 XSQUOTE
         DB $F-$-1,0Dh,0Ah
 $$      DW24 TYPE,EXIT
 ;endif	
