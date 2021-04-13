@@ -1,4 +1,8 @@
 Debug/
-!Debug/camel_f91_Debug.linkcmd
-!Debug/camel_f91_Debug.make
 Release/
+Chiponly/
+
+!*/camel_f91_*.linkcmd
+!*/camel_f91_*.make
+
+/camel_f91.wsp

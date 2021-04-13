@@ -36,40 +36,9 @@
 	DEFINE CAMELF91E,SPACE=rom
 	SEGMENT CAMELF91E
 	.ASSUME ADL=1
-	
-; Memory map for eZ80F91 Evaluation Platform:
-;   0000h       Forth kernel in ROM
-;   0E000h      Terminal Input Buffer, 128 bytes (eZ80F91 on-chip RAM)
-;   0E080h      Forth dictionary (eZ80F91 on-chip RAM)
-;   EM-200h     User area, 128 bytes
-;   EM-180h     Parameter stack, 128 bytes, grows down
-;   EM-100h     HOLD area, 40 bytes, grows down
-;   EM-0D8h     PAD buffer, 88 bytes
-;   EM-80h      Return stack, 128 bytes, grows down
-;   0FFFDh      End of Memory ('EM') (End of RAM)
-; See also the definitions of U0, S0, and R0
-; in the "system variables & constants" area.
-; A task w/o terminal input requires 200h bytes.
-; Double all except TIB and PAD for 32-bit CPUs.
 
-; RESET AND INTERRUPT VECTORS ===================
 
-    ;ORG 0000h
-    ;JP  ENTRY
-;    ORG 08h        ;RST 1 vector
-;    RET
-;    DW24 RST08ISR
-;    ORG 10h        ;RST 2 vector
-;    RET
-;    ORG 18h        ;RST 3 vector
-;    RET
-;           ...etc.  (for later implementation)
-;
-
-    ;ORG     ENTRY   ; program ENTRY POINT
-	; void * _set_vector(unsigned int vector, void(*handler)(void));
-	xref _set_vector
-	
+    ;forth program ENTRY POINT
 	xdef ENTRY
 ENTRY: ;reset:
 	DI
@@ -157,9 +126,9 @@ uart0:
 			out0	(UART0_LCTL), a		; Select 8 bits, no parity, 1 stop.
 			ld		a, 03h
 			out0	(UART0_MCTL), a		; Select activate RTS, DTR
-			IN0     A,(UART0_FCTL)
+			in0     A,(UART0_FCTL)
 			OR		A,06h
-			OUT0    (UART0_FCTL),A		; Enable UART Rx/Tx
+			out0    (UART0_FCTL),A		; Enable UART Rx/Tx
 			
 			ld		a,11010011b			; D3h. b6 = rx flow, 
 										; set RTS=0 and DTR=0 for no rx (b3, b2)
@@ -175,26 +144,20 @@ uart0:
 ;
 ; check if character ready to receive
 ;
-RCXRDY:
-if 0
-        IN0     A,(UART0_LSR)   ; check for char waiting..
-        AND     UART_DR
-        RET
-else
-			in0		a, (UART0_LSR)		; Read UART status register of COM Port 0.
-			bit		0, a				; Test character ready bit.
-			jr		z, uart0st1			; If not Zero then character available.
-			or		a, 0FFh				; Set character is available flag.
-			ret							; Done.
+RCXRDY:		in0		a, (UART0_LSR)	; Read UART status register of COM Port 0.
+			bit		0, a			; Test character ready bit.
+			jr		z, $F			; If not Zero then character available.
+			or		a, 0FFh			; Set character is available flag.
+			ret						; Done.
 			; no data so enable hardware flow control
 			; receive irq will disable RTS, DTR when fifo full
-uart0st1:	in0		a, (UART0_SPR)	; read HW flow register
+$$:			in0		a, (UART0_SPR)	; read HW flow register
 			bit		6, a			; see if we are using flow control
-			jr		z, uart0st3		; if no flow control return status
+			jr		z, $F			; if no flow control return status
 			; we are using receive flow control
 			in0		a, (UART0_IER)	; read irq enable register
 			bit		0, a			; Test irq already enabled.
-			jr		nz, uart0st3	; If Z=0 then IRQ enabled.
+			jr		nz, $F			; If Z=0 then IRQ enabled.
 			; enable flow control
 			in0		a, (UART0_SPR)	; read flow control settings
 			and		a, 03h			; mask off rx enabled bits
@@ -208,22 +171,22 @@ uart0st1:	in0		a, (UART0_SPR)	; read HW flow register
 			; setup for a receive IRQ
 			ld		a, 01h			; receive enable irq is bit 1
 			out0	(UART0_IER), a	; enable the receive interrupt
-uart0st3:	xor		a				; Set character not available flag.
+$$:			xor		a				; Set character not available flag.
 			ret						; Done.
 			
 TMXRDY:		in0		a, (UART0_SPR)	; read flow control bits
 			bit		7, a			; see if we are using flow control
-			jr		nz, uart0ost1	; if zero no tx flow control
+			jr		nz, $F			; if zero no tx flow control
 			; we are not using tx flow control, ok to use tx fifo
 			in0		a,(UART0_LSR)	; Read UART status register of COM port 1.
 			bit		5, a			; Test TX Data/shift register Empty ready bit
-			jr		z, uart0ostX	; if bit zero we can not transmit
+			jr		z, $TMXEX		; if bit zero we can not transmit
 			or		a, 0FFh			; indicate we can transmit
 			ret						; return to caller
 			; using tx flow control, do not use tx fifo
-uart0ost1:	in0		a, (UART0_LSR)	; Read UART status register of COM port 1.
+$$:			in0		a, (UART0_LSR)	; Read UART status register of COM port 1.
 			bit		6, a			; Test TX Data Register Empty ready bit
-uart0ost2:	jr		z, uart0ostX	; if zero nothing can be sent
+			jr		z, $TMXEX		; if zero nothing can be sent
 			; we are allowed to send if flow control lines allow it
 			push	bc
 			in0		a, (UART0_MSR)	; read current line settings
@@ -235,13 +198,12 @@ uart0ost2:	jr		z, uart0ostX	; if zero nothing can be sent
 			and		a, b			; logical and existing bits with required bits
 			xor		a, c			; compare with required bits
 			pop		bc
-			jr		nz, uart0ostX	; if not the same can not tx
+			jr		nz, $TMXEX		; if not the same can not tx
 			or		a, 0FFh			; indicate we can transmit
 			ret						; return to caller
 			; seams like we can send
-uart0ostX:  xor 	a, a
+$TMXEX:		xor 	a, a
 			ret			
-endif
 		
 ;
 ; transmit byte in reg C

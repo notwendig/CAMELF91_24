@@ -8,18 +8,78 @@ This port originated from the web pages of Douglas Beattie Jr.
 
 About this port of Camel Forth:
 
-This is a ZDSII_eZ80Acclaim!_5.3.4 project, which contains two separate builds:
+This is a ZDSII_eZ80Acclaim!_5.3.4 project, which contains three separate builds:
 See https://www.zilog.com zds2_eZ80Acclaim!_5.3.4_19112104.zip
 These projects are configured to build for the eZ80F91 Development Board
 Revision 99C0858-001 Rev C or later.
 
- - One build is 'Debug', which runs entirely out of 512KB eZ80F91 Module RAM
-    at 000000-03FFFFh for code (read only RAM) and 040000h-07FFFFh date RAM
+ - One build is 'Debug', which runs entirely out of 512KB eZ80F91 Module SRAM
+    as ROM mapped at 000000-07FFFFh for code and Chip's SRAM B7D000h-B7FFFFh continued
+    by DevPlattform's B80000h-BFFFFFh data SRAM
    directly from ZDS-II.
+
+eZ80F91 Camel FORTH 1.00e (24bit) - Debug, 13 APR 2021
+MEMCFG
+TIB:       B7D100 124
+U0:        B7D180 B7D180
+>IN:       B7D183 6
+BASE:      B7D186 10
+STATE:     B7D189 0
+DP:        B7D18C B7D1AD
+SOURCE:    B7D18F 6 B7D100
+LATEST:    B7D195 230E
+HP:        B7D198 BFFE21
+LP:        B7D19B BFFE7F
+S0:        B7D19E BFFDD7
+HOLD:      B7D1A1 BFFE27
+PAD:       B7D1A4 BFFE27
+L0:        B7D1A7 BFFE7F
+R0:        B7D1AA BFFFFF
 
  - The other is 'Release', which generates a HEX file, to burn into
    the eZ80F91 on-chip Flash with the Flash Loader (found in the Tools
-   menu of ZDS II). ROM 000000h-03FFFFh and RAM B7D000-B7FFFFh.
+   menu of ZDS II). Chip's ROM 000000h-03FFFFh and Chip's SRAM B7D000h-B7FFFFh continued
+   by DevPlattform's B80000h-BFFFFFh and Module's C00000h-C7FFFFh data SRAM
+
+eZ80F91 Camel FORTH 1.00e (24bit) - Release, 13 APR 2021
+MEMCFG
+TIB:       B7D100 124
+U0:        B7D180 B7D180
+>IN:       B7D183 6
+BASE:      B7D186 10
+STATE:     B7D189 0
+DP:        B7D18C B7D1AD
+SOURCE:    B7D18F 6 B7D100
+LATEST:    B7D195 2310
+HP:        B7D198 C7FE21
+LP:        B7D19B C7FE7F
+S0:        B7D19E C7FDD7
+HOLD:      B7D1A1 C7FE27
+PAD:       B7D1A4 C7FE27
+L0:        B7D1A7 C7FE7F
+R0:        B7D1AA C7FFFF
+
+ - The 3trh is 'Chipony', which generates a HEX file, to burn into
+   the eZ80F91 on-chip Flash with the Flash Loader (found in the Tools
+   menu of ZDS II). Chip's Flash 000000h-03FFFFh and SRAM B7D000-B7FFFFh.
+
+ eZ80F91 Camel FORTH 1.00e (24bit) - Chiponly, 13 APR 2021
+MEMCFG
+TIB:       B7D100 124
+U0:        B7D180 B7D180
+>IN:       B7D183 6
+BASE:      B7D186 10
+STATE:     B7D189 0
+DP:        B7D18C B7D1AD
+SOURCE:    B7D18F 6 B7D100
+LATEST:    B7D195 2311
+HP:        B7D198 B7FE21
+LP:        B7D19B B7FE7F
+S0:        B7D19E B7FDD7
+HOLD:      B7D1A1 B7FE27
+PAD:       B7D1A4 B7FE27
+L0:        B7D1A7 B7FE7F
+R0:        B7D1AA B7FFFF
 
 Select the build using 'Set Active Configuration' from the 'Build' menu,
 or from the toolbar.

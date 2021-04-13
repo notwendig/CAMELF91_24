@@ -11,13 +11,28 @@
 ; be directed to the author at 115 First St.,
 ; #105, Collingwood, Ontario L9Y 4W3, Canada
 ;
-VERSION MACRO
-	DB "1.00e (24bit)"
+VERSION MACRO 
+	DB "1.00e (24bit) - " 
+ifdef CHIPONLY
+ENDOFMEM	EQU B7FFFFh		; ROM=ChipFlash 000000-03FFFF, SRAM=on chip B7D000-B7FFFF
+	DB "Chiponly"
+else
+ifdef _DEBUG
+ENDOFMEM	EQU BFFFFFh		; ROM=ModulSRAM 000000-07FFFF, SRAM (DevBord+Chip) B7D000-BFFFFF
+	DB "Debug"
+else
+ENDOFMEM	EQU C7FFFFh		; ROM=ChipFlash 000000-03FFFF, SRAM (Module+DevBord+Chip) B7D000-C7FFFF
+	DB "Release"
+endif
+endif
+	DB ", 13 APR 2021",0Dh,0Ah
 	ENDMACRO
 
 ; frequency must be set properly for baud rate to
 ; be initialized correctly.
 	xref _SYS_CLK_FREQ 
+	; void * _set_vector(unsigned int vector, void(*handler)(void));
+	xref _set_vector
 	
 ; ********************************************************
 ; *** SET UP SERIAL COMMUNICATIONS WITH HOST.
@@ -68,7 +83,7 @@ PADBUFFERSZ	EQU		 88
 LEAVESTACKSZ EQU 	128
 RETNSTACKSZ	EQU 	256
 
-USERSEGMENT EQU	ENDOFMEM - PARASTACKSZ - HOLDSTACKSZ - PADBUFFERSZ - LEAVESTACKSZ - RETNSTACKSZ + 1
+USERSEGMENT EQU	ENDOFMEM - PARASTACKSZ - HOLDSTACKSZ - PADBUFFERSZ - LEAVESTACKSZ - RETNSTACKSZ
 
 docode  EQU 0      ; flag to indicate CODE words
 link    .SET 0     ; link to previous Forth word
@@ -118,10 +133,4 @@ nexthl  MACRO
         ENDMACRO nexthl
 
 	xref __heaptop
-	
-ifdef _DEBUG	
-ENDOFMEM EQU BFFFFFh
-else
-ENDOFMEM EQU B7FFFFh
-endif
 

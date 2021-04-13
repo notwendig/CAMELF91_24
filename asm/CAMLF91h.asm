@@ -1112,8 +1112,7 @@ DOTS2:  DW24 EXIT
         DW24 XSQUOTE      ; sign-on banner to console
         DB $F-$-1,0Dh,0Ah,0Dh,0Ah
         DB "eZ80F91 Camel FORTH "
-        VERSION
-        DB ", 1 APR 2021",0Dh,0Ah
+        VERSION 
 $$:     DW24 TYPE,ABORT       ; ABORT never returns
 
 ;

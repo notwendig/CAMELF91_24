@@ -1,7 +1,8 @@
 ;CAMLF91d.S -- Forth Kernel
-; CamelForth for the Zilog eZ80F91
-; portions (C) 2004 Douglas Beattie Jr.
-;
+; CamelForth for the Zilog eZ80F91-24bit
+; portions (C) 2021 for eZ80F91 24bit by JSievers@NadiSoft.de
+; ..based on CamelForth for the Zilog eZ80F91 16bit
+; (C) 2004 Douglas Beattie Jr.
 ; ..based on CamelForth for the Zilog Z80
 ; (C) 1994 Bradford J. Rodriguez
 ; Permission is granted to freely copy, modify,
@@ -18,8 +19,8 @@
 ;   Forth Core word set.  Names in lower case are
 ;   "internal" implementation words & extensions.
 ;
-; Direct-Threaded Forth model for Zilog Z80
-;   cell size is   16 bits (2 bytes)
+; Direct-Threaded Forth model for Zilog eZ80
+;   cell size is   24 bits (3 bytes)
 ;   char size is    8 bits (1 byte)
 ;   address unit is 8 bits (1 byte), i.e.,
 ;       addresses are byte-aligned.
@@ -73,7 +74,7 @@ noop:   next
         jr noop
 
 ;C >BODY    xt -- a-addr      adrs of param field
-;   3 + ;                     Z80 (3 byte CALL)
+;   4 + ;                     eZ80 (4 byte CALL)
     head TOBODY,{">BODY"},docolon
         DW24 LIT,4,PLUS,EXIT
 
@@ -87,7 +88,7 @@ noop:   next
 
 ;Z !CF    adrs cfa --   set code action of a word
 ;   0CD OVER C!         store 'CALL adrs' instr
-;   1+ ! ;              Z80 VERSION
+;   1+ ! ;              eZ80 VERSION
 ; Depending on the implementation this could
 ; append CALL adrs or JUMP adrs.
     head STORECF,{"!CF"},docolon
