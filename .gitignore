@@ -1,8 +1,10 @@
-Debug/
-Release/
-Chiponly/
+
+Debug/*
+Release/*
+Chiponly/*
 
 !*/camel_f91_*.linkcmd
-!*/camel_f91_*.make
+!*/camel_f91_*.mak
 
 /camel_f91.wsp
+/*.tar.gz
