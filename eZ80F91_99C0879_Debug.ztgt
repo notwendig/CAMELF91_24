@@ -42,7 +42,7 @@
             <upper>07</upper>
          </CS1>
          <CS2>
-            <busMode>81</busMode>
+            <busMode>0</busMode>
             <controlRegister>28</controlRegister>
             <lower>80</lower>
             <upper>bf</upper>
