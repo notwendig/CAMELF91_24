@@ -118,20 +118,20 @@ link    .SET CAMEL91D_LAST     ; link to previous Forth word
 	XDEF defuser
 defuser	.tag USERAREA
 defuser:
-def_U0 			DW24 user		;  0 USER U0        current user area adrs
-def_TOIN 		DW24 0			;  3 USER >IN       holds offset into TIB
-def_BASE		DW24 10			;  6 USER BASE      holds conversion radix
-def_STATE		DW24 0			;  9 USER STATE     holds compiler state
-def_DP			DW24 enddict	; 12 USER DP        holds dictionary ptr
-def_TICKSOURCE 	DW24 0,0		; 15 USER SOURCE    two cells: len, adrs
-def_LATEST		DW24 lastword 	; 21 USER LATEST    last word in dict.
-def_HP			DW24 __HOLDP	; 24 USER HP        HOLD pointer
-def_LP			DW24 __L0		; 28 USER LP        Lreave-stack pointer
-def_S0			DW24 __S0		; 31 Parameter stack, grows down
-def_HOLDP		DW24 __HOLDP	; 34 HOLD grows down
-def_PAD			DW24 __PAD		; 37 PAD buffer grows up
-def_L0         	DW24 __L0		; 40 bottom of Leave stack grows up
-def_R0         	DW24 __R0		; 43 Return stack, grows down
+	DW24 user0		;  0 USER U0        current user area adrs
+	DW24 0			;  3 USER >IN       holds offset into TIB
+	DW24 10			;  6 USER BASE      holds conversion radix
+	DW24 0			;  9 USER STATE     holds compiler state
+	DW24 enddict	; 12 USER DP        holds dictionary ptr
+ 	DW24 0,0		; 15 USER SOU RCE    two cells: len, adrs
+	DW24 lastword 	; 21 USER LATEST    last word in dict.
+	DW24 __HOLDP	; 24 USER HP        HOLD pointer
+	DW24 __L0		; 28 USER LP        Lreave-stack pointer
+	DW24 __S0		; 31 USER S0 Parameter stack, grows down
+	DW24 __HOLDP	; 34 HOLD gro ws down
+	DW24 __PAD		; 37 PAD  buffer grows up
+	DW24 __L0		; 40 L0   bottom of Leave stack grows up
+	DW24 __R0		; 43 R0   Return stack, grows down
 
 
 ;Z #init    -- n    #bytes of user area init data
@@ -784,7 +784,6 @@ INTER9: DW24 DROP,EXIT
 ;       STATE @ 0= IF CR ." OK" THEN
 ;   AGAIN ;
     head QUIT,{"QUIT"},docolon
-        DW24 INIT_UART
         DW24 L0,FETCH,LP,STORE
         DW24 R0,FETCH,RPSTORE,LIT,0,STATE,STORE
 QUIT1:  DW24 TIB,DUP,TIBSIZE,ACCEPT,SPACE
@@ -1108,6 +1107,7 @@ WDS1:   DW24 DUP,COUNT,TYPE,SPACE,NFATOLFA,FETCH
         DW24 SPFETCH,S0,FETCH,CELL,MINUS,XDO
 DOTS1:  DW24 II,FETCH,UDOT,CELL,NEGATE,XPLUSLOOP,DOTS1
 DOTS2:  DW24 EXIT
+	
 
 ;Z COLD     --      cold start Forth system
 ;   UINIT U0 #INIT CMOVE      init user area
@@ -1115,7 +1115,7 @@ DOTS2:  DW24 EXIT
 ;   ." eZ80F91 CamelForth etc."
 ;   ABORT ;
     head COLD,{"COLD"},docolon
-        DW24 INIT_UART            ;initialize UART for terminal I/O
+		DW24 RESET            ;initialize UART for terminal I/O
         DW24 UINIT,U0,NINIT,CMOVE     ;initialize User area
 ;		DW24 LIT,InpBuffer,COUNT,INTERPRET
 ;       DW24 LIT,0398h,TMR1_INIT      ;turn on 1-msec timer

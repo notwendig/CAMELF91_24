@@ -32,6 +32,7 @@
 	.list off
     .INCLUDE "eZ80F91.INC"    ; CPU Equates
 	.INCLUDE "intvect.inc"
+	.INCLUDE "bsp.inc"
 	.list on
 	.INCLUDE "CAMLF91.INC"
 
@@ -40,190 +41,42 @@
 
 link    .SET 0     ; link to previous Forth word
 
+	XDEF _main
+_main:			call	init_bsp
+	
     ;forth program ENTRY POINT
 	xdef ENTRY
 ENTRY: ;reset:
-	DI
-	IN0		a,(PD_ALT2)
-	OR		a,ffh
-	OUT0	(PD_ALT2),a
-	IN0		a,(PD_ALT1)
-	OR		a,0
-	OUT0	(PD_ALT1),a
-	IN0		a,(PD_DDR)
-	OR		a,ffh
-	OUT0	(PD_DDR),a
-	ld		a,0
-	out0	(UART0_IER), a
-	ld		hl,Uart0IRQ
-	push	hl
-	ld		hl,UART0_IVECT
-	push	hl
-	call	_set_vector
-	call	uart0
-
 ; ********************************************************
-; ** ( initialize registers, and jump to COLD )
+; ** ( initialize registers, and jump o COLD )
+	ld	de,1
+	ei
+    jp COLD     ; enter top-level Forth word2
+
+
+;Z RESET  --    
+    head RESET,{"RESET"},docode
 	
+	ld	a,i
+	push	af
+	di
     ld	iy,defuser
 	ld	ix,(iy+USERAREA.R0)	; = top of return stack
 	ld	hl,(iy+USERAREA.S0)	; = top of param stack
 	ld	iy,(iy+USERAREA.U0)	; = bottom of user area
-	ld	sp,hl
-    ld 	de,1      ; do reset if COLD returns
+    ;ld 	de,1      ; do reset if COLD returns
     LD  A,0Dh
     LD  (InpBuffer),A
+	pop	af
+	ld	sp,hl
+	jp	po,$F
 	EI
-    jp COLD      ; enter top-level Forth word2
-
+$$:	next
 
 ;Z debug break  --    
     head dbg,{"DBG"},docode
 	nop
 	next
-
-;Z INIT-UART  --    Initialize UART and activate driver/receiver
-; note that both COLD and QUIT call this procedure.
-;   user program can also call it if needed.
-    head INIT_UART,{"INIT-UART"},docode
-	call	uart0
-	next
-
-Uart0IRQ:	push	af
-			in0		a, (UART0_IER)		; read the UART0 interrupt enable
-			and		a, 0FEh				; receive enable irq is bit 0
-			out0	(UART0_IER), a		; clear the receive interrupt
-			in0		a, (UART0_SPR)		; read the HW flow cntrl setup
-			;see if we are using hardware flow control
-			bit		6, a				; are we using flow control
-			jr		z, $F				; if b6 = 0 no flow control
-			;Implement flow control. b2,b3 have to be in b0, b1
-			;to be copied to the modem line control register
-			rra
-			rra
-			and		a, 03h				; mask the receive disabled bits
-			push	bc
-			ld		b, a				; save the bits we need
-			in0		a, (UART0_MCTL)		; Get RTS, DTR inactivate.
-			and		a, 0FCh				; force lines lows
-			or		a, b				; set desired lines high
-			out0	(UART0_MCTL), a		; Set RTS, DTR to inactivate state.
-			pop		bc
-$$:			pop		af
-			ei
-			reti
-			
-uart0:	
-	; Configure UART0 for 115200,8,1,n. Tx flow DSR, Rx flow DTR, RTS
-			ld		a, C7h
-			out0	(UART0_FCTL), a		; Enable FIFO and clear, int after 14 bytes.
-			ld		a, 80h
-			out0	(UART0_LCTL), a		; Enable access to BRG.
-			ld		a, LOW(DIVISOR)
-			out0	(UART0_BRG_L), a	; Load low byte of BRG.
-			ld		a, HIGH(DIVISOR)
-			out0	(UART0_BRG_H), a	; Load high byte of BRG.
-			ld		a, 03h
-			out0	(UART0_LCTL), a		; Select 8 bits, no parity, 1 stop.
-			ld		a, 03h
-			out0	(UART0_MCTL), a		; Select activate RTS, DTR
-			in0     A,(UART0_FCTL)
-			OR		A,06h
-			out0    (UART0_FCTL),A		; Enable UART Rx/Tx
-			
-			ld		a,11010011b			; D3h. b6 = rx flow, 
-										; set RTS=0 and DTR=0 for no rx (b3, b2)
-										; set RTS=1 and DTR=1 for rx (b1, b0)
-										; b7 = tx flow,
-										; DSR = 0, CTS = 1 for tx allowed (b5, b4)
-			out0	(UART0_SPR), a		; save the settings in the scratch register		
-										; setup for a receive IRQ
-			ld		a, 01h				; receive enable irq is bit 1
-			out0	(UART0_IER), a		; enable the receive interrupt
-			ret
-
-;
-; check if character ready to receive
-;
-RCXRDY:		in0		a, (UART0_LSR)	; Read UART status register of COM Port 0.
-			bit		0, a			; Test character ready bit.
-			jr		z, $F			; If not Zero then character available.
-			or		a, 0FFh			; Set character is available flag.
-			ret						; Done.
-			; no data so enable hardware flow control
-			; receive irq will disable RTS, DTR when fifo full
-$$:			in0		a, (UART0_SPR)	; read HW flow register
-			bit		6, a			; see if we are using flow control
-			jr		z, $F			; if no flow control return status
-			; we are using receive flow control
-			in0		a, (UART0_IER)	; read irq enable register
-			bit		0, a			; Test irq already enabled.
-			jr		nz, $F			; If Z=0 then IRQ enabled.
-			; enable flow control
-			in0		a, (UART0_SPR)	; read flow control settings
-			and		a, 03h			; mask off rx enabled bits
-			push	bc
-			ld      b, a			; save the rx flow bits
-			in0		a, (UART0_MCTL)	; get the modem line settings
-			and		a, 0FCh			; set all rx flow bits low
-			or		a, b			; set required lines high
-			out0	(UART0_MCTL),a	; Set RTS, DTR to rx enabled state
-			pop		bc
-			; setup for a receive IRQ
-			ld		a, 01h			; receive enable irq is bit 1
-			out0	(UART0_IER), a	; enable the receive interrupt
-$$:			xor		a				; Set character not available flag.
-			ret						; Done.
-			
-TMXRDY:		in0		a, (UART0_SPR)	; read flow control bits
-			bit		7, a			; see if we are using flow control
-			jr		nz, $F			; if zero no tx flow control
-			; we are not using tx flow control, ok to use tx fifo
-			in0		a,(UART0_LSR)	; Read UART status register of COM port 1.
-			bit		5, a			; Test TX Data/shift register Empty ready bit
-			jr		z, $TMXEX		; if bit zero we can not transmit
-			or		a, 0FFh			; indicate we can transmit
-			ret						; return to caller
-			; using tx flow control, do not use tx fifo
-$$:			in0		a, (UART0_LSR)	; Read UART status register of COM port 1.
-			bit		6, a			; Test TX Data Register Empty ready bit
-			jr		z, $TMXEX		; if zero nothing can be sent
-			; we are allowed to send if flow control lines allow it
-			push	bc
-			in0		a, (UART0_MSR)	; read current line settings
-			and		a, 30h			; mask off the DSR, CTS (B5, B4)
-			ld		b, a			; save the bits we need to check
-			in0		a, (UART0_SPR)	; get required settings from flow cntrl reg
-			and		a, 30h			; mask off the required tx flow bits
-			ld		c, a			; save the required bits
-			and		a, b			; logical and existing bits with required bits
-			xor		a, c			; compare with required bits
-			pop		bc
-			jr		nz, $TMXEX		; if not the same can not tx
-			or		a, 0FFh			; indicate we can transmit
-			ret						; return to caller
-			; seams like we can send
-$TMXEX:		xor 	a, a
-			ret			
-		
-;
-; transmit byte in reg C
-;
-	
-TXMCHR:
-	CALL	TMXRDY
-    JR      Z,TXMCHR
-    LD      A,C
-    OUT0    (UART0_THR),A
-    RET
-;
-; receive byte into reg A
-;
-RCXCHR:
-	CALL	RCXRDY
-    JR      Z,RCXCHR
-    IN0     A,(UART0_RBR)
-    RET
 
 ; INTERPRETER LOGIC =============================
 ; See also "defining words" at end of this file
@@ -337,22 +190,24 @@ dodoes: ; -- a-addr
 ;C EMIT     c --    output character to console
 
     head EMIT,{"EMIT"},docode
-        CALL    TXMCHR
+		ld		a,c
+		call	uart0_putc
         POP     BC
         next
 
 ;C KEY?     -- f    return true if char waiting
     head QUERYKEY,{"KEY?"},docode
         PUSH 	BC     					; PREPARE FOR NEW TOS
-        CALL 	RCXRDY
 		ld		bc,0
-        LD 		C,A      				; RESULT IN TOS
-        next
+		call	uart0_kbhit
+		jr		z,$F
+		dec		bc
+$$:     next
 
 ;C KEY      -- c    get character from keyboard
     head KEY,{"KEY"},docode
         PUSH 	BC     					;PREPARE FOR NEW TOS
-        CALL 	RCXCHR
+        call	uart0_getc
 		ld		bc,0
         LD 		C,A      				; RESULT IN TOS
         next
@@ -367,7 +222,7 @@ dodoes: ; -- a-addr
 
 ;C DUP      x -- x x      duplicate top of stack
     head DUP,{"DUP"},docode
-pushtos:push 	bc
+		push 	bc
      	next
 
 ;C ?DUP     x -- 0 | x x    DUP if nonzero
@@ -375,12 +230,13 @@ pushtos:push 	bc
 		or		a
 		sbc		hl,hl
 		sbc		hl,bc
-        jr 		nz,pushtos
-        next
+        jr 		z,$F
+		push	bc
+$$:		next
 
 ;C DROP     x --          drop top of stack
     head DROP,{"DROP"},docode
-poptos: pop 	bc
+		pop 	bc
         next
 
 ;C SWAP     x1 x2 -- x2 x1    swap top two items
@@ -879,7 +735,7 @@ dobranch:ex de,hl
 ; Add 1 to the loop index.  If loop terminates,
 ; clean up the return stack and skip the branch.
 ; Else take the inline branch.  Note that LOOP
-; terminates when index=8000h.
+; terminates when index=800000h.
     head XLOOP,{"(loop)"},docode
         exx
         ld bc,1
@@ -941,7 +797,7 @@ loopterm: ; terminate the loop
 
 ; MULTIPLY AND DIVIDE ===========================
 
-;C UM*     u1 u2 -- ud   unsigned 16x16->32 mult.
+;C UM*     u1 u2 -- ud   unsigned 24x24->48 mult.
     head UMSTAR,{"UM*"},docode
         ld hl,0     ; result will be in HLDE
 		push hl	
@@ -1221,14 +1077,11 @@ lastword EQU CAMEL91H_LAST       ; nfa of last word in dict.
  XDEF docolon
  XDEF InpBuffer
  XDEF docreate
- XDEF user
- XDEF enddict
-
+ XDEF user0
+ 
 InpBuffer 	DS 128 
-user	.tag	USERAREA
-user:	
-	ds USERAREASZ
-
-enddict		DS	3			    ; user's code starts here	
+user0		.tag	USERAREA
+user0:		ds USERAREASZ
+	
 
 	END     ;ENTRY

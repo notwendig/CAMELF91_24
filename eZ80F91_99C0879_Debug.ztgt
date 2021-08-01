@@ -20,7 +20,7 @@
       <device>Am29LV008BB</device>
       <externalAddress>100000</externalAddress>
       <externalAutoSelect>true</externalAutoSelect>
-      <externalRamLower>B80000</externalRamLower>
+      <externalRamLower>B7E000</externalRamLower>
       <externalRamUpper>BFFFFF</externalRamUpper>
       <manufacturer>AMD</manufacturer>
       <units>1</units>

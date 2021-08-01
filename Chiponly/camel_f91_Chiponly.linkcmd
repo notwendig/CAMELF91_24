@@ -78,10 +78,11 @@ DEFINE __low_code = base of CODE
 DEFINE __len_code = length of CODE
 /* end additional user-defined directives */
 
-"Z:\workspace\CAMLF91\Chiponly\camel_f91"= \
+"Z:\workspace\CAMELF91_24\Chiponly\camel_f91"= \
  ".\CAMLF91d.obj", \
  ".\CAMLF91e.obj", \
  ".\CAMLF91h.obj", \
+ ".\CAMLF91t.obj", \
  ".\init_params_f91.obj", \
  ".\vectors24.obj", \
  "Z:\ZDSII_eZ80Acclaim!_5.3.4\lib\std\chelp.lib", \

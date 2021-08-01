@@ -9,9 +9,11 @@
         INCLUDE "ez80f91.inc"
 
         
+        XREF __stack
         XREF __init_default_vectors
-		XREF ENTRY
-		XREF __stack
+        XREF __c_startup
+        XREF __cstartup
+        XREF _main
         XREF __CS0_LBR_INIT_PARAM
         XREF __CS0_UBR_INIT_PARAM
         XREF __CS0_CTL_INIT_PARAM
@@ -138,7 +140,20 @@ __init:
     ; Initialize Clock
     call _InitSysClk
 
-   
+    ; start application
+    ld a, __cstartup
+    or a, a
+    jr z, __no_cstartup
+    call __c_startup
+
+__no_cstartup:
+    ;--------------------------------------------------
+    ; Initialize the peripheral devices
+
+        XREF __open_periphdevice
+
+    call __open_periphdevice
+
     ;---------------------------------------------
     ; prepare to go to the main system rountine
     ld hl, 0                   ; hl = NULL
@@ -148,12 +163,19 @@ __init:
     push ix                    ; &argv[0]
     pop hl
     ld de, 0                   ; argc = 0
-    call ENTRY
+    call _main                 ; int main(int argc, char *argv[]))
     pop de                     ; clean the stack
 
 __exit:
 _exit:
 _abort:
+    ;--------------------------------------------------
+    ; Close the peripheral devices
+
+        XREF __close_periphdevice
+
+    call __close_periphdevice
+
     jr $                ; if we return from main loop forever here
 
 

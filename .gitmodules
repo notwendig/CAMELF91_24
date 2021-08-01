@@ -1,0 +1,3 @@
+[submodule "libbsp"]
+	path = libbsp
+	url = file:///home/juergen/ZiLOG/workspace/ez80f91bsp
