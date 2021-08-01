@@ -143,20 +143,24 @@ camel_f91: $(OBJS)
 	 $(LD) $(LDFLAGS)
 
 $(WORKDIR_ESCSPACE)\CAMLF91d.obj :  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm  \
+            $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
+            $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91d.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91e.obj :  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91e.asm  \
             $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
-            $(PRJDIR_ESCSPACE)\asm\CAMELF91.INC  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91e.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91h.obj :  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm  \
+            $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
+            $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91h.asm"
 
 $(WORKDIR_ESCSPACE)\init_params_f91.obj :  \

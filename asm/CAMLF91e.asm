@@ -29,14 +29,16 @@
 ;   23 JAN 2004 v1.00e for eZ80F91
 ;	01 APR 2021 v1.00e-24bit for eZ80F91 JSievers@NadiSoft.de
 
+	.list off
     .INCLUDE "eZ80F91.INC"    ; CPU Equates
 	.INCLUDE "intvect.inc"
-	.INCLUDE "CAMELF91.INC"
+	.list on
+	.INCLUDE "CAMLF91.INC"
 
-	DEFINE CAMELF91E,SPACE=rom
-	SEGMENT CAMELF91E
+	SEGMENT CODE
 	.ASSUME ADL=1
 
+link    .SET 0     ; link to previous Forth word
 
     ;forth program ENTRY POINT
 	xdef ENTRY
@@ -62,12 +64,11 @@ ENTRY: ;reset:
 
 ; ********************************************************
 ; ** ( initialize registers, and jump to COLD )
+	
     ld	iy,defuser
-	WITH USERAREA
-	ld	ix,(iy+R0)	; = top of return stack
-	ld	hl,(iy+S0)	; = top of param stack
-	ld	iy,(iy+U0)	; = bottom of user area
-	ENDWITH
+	ld	ix,(iy+USERAREA.R0)	; = top of return stack
+	ld	hl,(iy+USERAREA.S0)	; = top of param stack
+	ld	iy,(iy+USERAREA.U0)	; = bottom of user area
 	ld	sp,hl
     ld 	de,1      ; do reset if COLD returns
     LD  A,0Dh
@@ -259,7 +260,7 @@ RCXCHR:
 ; (internal code fragment, not a Forth word)
 ; N.B.: DOCOLON must be defined before any
 ; appearance of 'docolon' in a 'word' macro!
-
+	XDEF docolon
 docolon:               					; (alternate name)
 enter:  lea		ix,ix-3
         ld 		(ix),de   				; push old IP on ret stack
@@ -1198,9 +1199,8 @@ snext:  next
 
 	; We have to including all together into
 	; one big file to preserve the link chain.
-	INCLUDED EQU 1
-	.INCLUDE "CAMLF91d.asm"   ; CPU Dependencies
-    .INCLUDE "CAMLF91h.asm"   ; High Level words
+	XDEF CAMEL91E_LAST
+CAMEL91E_LAST EQU link
 
 	; HEADER STRUCTURE ==============================
 	; The structure of the Forth dictionary headers
@@ -1213,47 +1213,22 @@ snext:  next
 	; REVEAL.  These words must be (substantially)
 	; rewritten if either the header structure or its
 	; inherent assumptions are changed.
-
-lastword EQU link       ; nfa of last word in dict.
+	XDEF	lastword
+lastword EQU CAMEL91H_LAST       ; nfa of last word in dict.
 
 	segment bss
+
+ XDEF docolon
+ XDEF InpBuffer
+ XDEF docreate
+ XDEF user
+ XDEF enddict
 
 InpBuffer 	DS 128 
 user	.tag	USERAREA
 user:	
-ifdef _DEBUG
-dbg_U0 			DS	3		;  0 USER U0        current user area adrs
-dbg_TOIN 		DS	3		;  3 USER >IN       holds offset into TIB
-dbg_BASE		DS	3		;  6 USER BASE      holds conversion radix
-dbg_STATE		DS	3		;  9 USER STATE     holds compiler state
-dbg_DP			DS	3		; 12 USER DP        holds dictionary ptr
-dbg_TICKSOURCE	DS	6		; 15 USER SOURCE    two cells: len, adrs
-dbg_LATEST		DS	3		; 21 USER LATEST    last word in dict.
-dbg_HP			DS	3		; 24 USER HP        HOLD pointer
-dbg_LP			DS	3		; 28 USER LP        Leave-stack pointer
-dbg_S0			DS	3		; 31 Parameter stack, grows down
-dbg_HOLDP		DS  3		; 34 HOLD grows down
-dbg_PAD			DS  3		; 37 PAD buffer grows up
-dbg_L0         	DS  3		; 40 bottom of Leave stack grows up
-dbg_R0         	DS  3		; 43 Return stack, grows down
-else
-		ds USERAREASZ
-endif
+	ds USERAREASZ
+
 enddict		DS	3			    ; user's code starts here	
-	
-	ORG USERSEGMENT
 
-			DS	PARASTACKSZ	;128
-__S0		; Parameter stack, 128B, grows down
-
-			DS	HOLDSTACKSZ	;40
-__HOLDP		; HOLD area, 40 bytes, grows down
-
-__PAD		DS	PADBUFFERSZ	; PAD buffer, 88 bytes
-
-__L0		DS	LEAVESTACKSZ; 97 bottom of Leave stack grows up
-
-			DS  RETNSTACKSZ	; 128
-__R0		; Return stack, 128 B, grows down
-
-        END     ;ENTRY
+	END     ;ENTRY

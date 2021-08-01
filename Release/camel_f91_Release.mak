@@ -53,12 +53,14 @@ CFLAGS =  \
 -cpu:EZ80F91  \
 -asmsw:"   \
 	-define:_EZ80ACCLAIM!=1 -define:_MEMCFG=B7FFFFh  \
+	-define:_RELEASE=1  \
 	-include:\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"  \
 	-list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn  \
 	-NOdebug -NOigcase -cpu:EZ80F91"
 
 ASFLAGS =  \
 -define:_EZ80ACCLAIM!=1 -define:_MEMCFG=B7FFFFh  \
+-define:_RELEASE=1  \
 -include:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
 -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt  \
 -warn -NOdebug -NOigcase -cpu:EZ80F91
@@ -144,20 +146,24 @@ camel_f91: $(OBJS)
 	 $(LD) $(LDFLAGS)
 
 $(WORKDIR_ESCSPACE)\CAMLF91d.obj :  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm  \
+            $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
+            $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91d.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91e.obj :  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91e.asm  \
             $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
-            $(PRJDIR_ESCSPACE)\asm\CAMELF91.INC  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91d.asm  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91e.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91h.obj :  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91h.asm  \
+            $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
+            $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.INC
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91h.asm"
 
 $(WORKDIR_ESCSPACE)\init_params_f91.obj :  \

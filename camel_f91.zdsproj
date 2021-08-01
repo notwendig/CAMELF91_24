@@ -1,4 +1,4 @@
-<project type="Executable" project-type="Standard" configuration="Debug" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
+<project type="Executable" project-type="Standard" configuration="Chiponly" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
 <cpu>EZ80F91</cpu>
 
 <!-- file information -->
@@ -90,7 +90,7 @@
 </tool>
 <tool name="Linker">
 <options>
-<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA,CAMELF91E,CAMELF91D,CAMELF91H
+<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA
 
 DEFINE __low_romdata = copy base of DATA
 DEFINE __low_data = base of DATA
@@ -148,7 +148,7 @@ DEFINE __len_code = length of CODE</option>
 <tools>
 <tool name="Assembler">
 <options>
-<option name="define" type="string" change-action="assemble">_EZ80ACCLAIM!=1,_MEMCFG=B7FFFFh</option>
+<option name="define" type="string" change-action="assemble">_EZ80ACCLAIM!=1,_MEMCFG=B7FFFFh,_RELEASE=1</option>
 <option name="include" type="string" change-action="assemble"></option>
 <option name="list" type="boolean" change-action="none">true</option>
 <option name="listmac" type="boolean" change-action="none">true</option>
@@ -222,7 +222,7 @@ DEFINE __len_code = length of CODE</option>
 </tool>
 <tool name="Linker">
 <options>
-<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA,CAMELF91E,CAMELF91D,CAMELF91H
+<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA
 
 DEFINE __low_romdata = copy base of DATA
 DEFINE __low_data = base of DATA
@@ -280,7 +280,7 @@ DEFINE __len_code = length of CODE</option>
 <tools>
 <tool name="Assembler">
 <options>
-<option name="define" type="string" change-action="assemble">_EZ80ACCLAIM!=1,CHIPONLY</option>
+<option name="define" type="string" change-action="assemble">_EZ80ACCLAIM!=1,_CHIPONLY=1</option>
 <option name="include" type="string" change-action="assemble"></option>
 <option name="list" type="boolean" change-action="none">true</option>
 <option name="listmac" type="boolean" change-action="none">true</option>
@@ -354,7 +354,7 @@ DEFINE __len_code = length of CODE</option>
 </tool>
 <tool name="Linker">
 <options>
-<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA,CAMELF91E,CAMELF91D,CAMELF91H
+<option name="directives" type="string" change-action="build">ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA
 
 DEFINE __low_romdata = copy base of DATA
 DEFINE __low_data = base of DATA
@@ -416,6 +416,13 @@ DEFINE __len_code = length of CODE</option>
 
 <!-- breakpoint information -->
 <breakpoints>
+<breakpoint temporary="false" enabled="true" >
+<line-number>68</line-number>
+<pathname>Z:\workspace\CAMLF91\asm\CAMLF91e.asm</pathname>
+<address>876</address>
+<command></command>
+<preserve-type>0</preserve-type>
+</breakpoint>
 </breakpoints>
 
 </project>

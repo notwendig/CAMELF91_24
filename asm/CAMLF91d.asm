@@ -29,12 +29,17 @@
 ; ALIGNMENT AND PORTABILITY OPERATORS ===========
 ; Many of these are synonyms for other words,
 ; and so are defined as CODE words.
+	.list off
+    .INCLUDE "eZ80F91.INC"    ; CPU Equates
+	.INCLUDE "intvect.inc"
+	.list on
+	.INCLUDE "CAMLF91.INC"
 
-	DEFINE CAMELF91D,SPACE=rom
-	SEGMENT CAMELF91D
+	SEGMENT CODE
 	.ASSUME ADL=1
-	
-ifdef INCLUDED
+
+link    .SET CAMEL91E_LAST     ; link to previous Forth word
+
 
 ;C ALIGN    --                         align HERE
     head ALIGN,{"ALIGN"},docode
@@ -141,6 +146,5 @@ noop:   next
     head STOREDEST,{"!DEST"},docode
         jp STORE
 
-else
-	ds 1	; makes the relist happy
-endif ;INCLUDED
+	XDEF CAMEL91D_LAST
+CAMEL91D_LAST	EQU link

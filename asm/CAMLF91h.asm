@@ -21,13 +21,17 @@
 ; ===============================================
 
 ; SYSTEM VARIABLES & CONSTANTS ==================
-	
-	DEFINE CAMELF91H,SPACE=rom
-	SEGMENT CAMELF91H
-	.ASSUME ADL=1
-	
-ifdef INCLUDED
 
+ 	.list off
+    .INCLUDE "eZ80F91.INC"    ; CPU Equates
+	.INCLUDE "intvect.inc"
+	.list on
+	.INCLUDE "CAMLF91.INC"
+
+	SEGMENT CODE
+	.ASSUME ADL=1
+
+link    .SET CAMEL91D_LAST     ; link to previous Forth word
 ;C BL      -- char            an ASCII space
     head BL,{"BL"},docon
         DW24 20h
@@ -111,6 +115,7 @@ ifdef INCLUDED
 
 ;Z uinit    -- addr  initial values for user area
     head UINIT,{"UINIT"},docreate
+	XDEF defuser
 defuser	.tag USERAREA
 defuser:
 def_U0 			DW24 user		;  0 USER U0        current user area adrs
@@ -649,7 +654,7 @@ WORD1:  DW24 RFROM,RFROM,ROT,MINUS,TOIN,PLUSSTORE
 ;   THEN ;
     head FIND,{"FIND"},docolon
         DW24 LATEST,FETCH
-FIND1:  DW24 dbg,TWODUP,OVER,CFETCH,CHARPLUS
+FIND1:  DW24 TWODUP,OVER,CFETCH,CHARPLUS
         DW24 SEQUAL,DUP,QBRANCH,FIND2
         DW24 DROP,NFATOLFA,FETCH,DUP
 FIND2:  DW24 ZEROEQUAL,QBRANCH,FIND1
@@ -1169,7 +1174,6 @@ DUMP7   DW24      EMIT
         DW24      XPLUSLOOP,DUMP3
         DW24      CR,EXIT
 
-else
-	ds 1	; makes the relist happy
-endif ;INCLUDED
+	XDEF CAMEL91H_LAST
+CAMEL91H_LAST EQU link
 	END

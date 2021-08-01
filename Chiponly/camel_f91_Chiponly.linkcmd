@@ -12,13 +12,13 @@
 /* -usrinc:"\"..;\"" -NOmultithread -NOpadbranch -NOdebug */
 /* -cpu:EZ80F91 */
 /*-asmsw:"  */
-	/* -define:_EZ80ACCLAIM!=1 -define:CHIPONLY */
+	/* -define:_EZ80ACCLAIM!=1 -define:_CHIPONLY=1 */
 	/* -include:\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\" */
 	/* -list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn */
 	/* -NOdebug -NOigcase -cpu:EZ80F91" */
 
 /* assembler options */
-/* -define:_EZ80ACCLAIM!=1 -define:CHIPONLY */
+/* -define:_EZ80ACCLAIM!=1 -define:_CHIPONLY=1 */
 /* -include:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
 /* -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt */
 /* -warn -NOdebug -NOigcase -cpu:EZ80F91 */
@@ -63,7 +63,7 @@ define __PLL_CTL0_INIT_PARAM = $40
 
 
 /* additional user-defined directives */
-ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA,CAMELF91E,CAMELF91D,CAMELF91H
+ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA
 
 DEFINE __low_romdata = copy base of DATA
 DEFINE __low_data = base of DATA
