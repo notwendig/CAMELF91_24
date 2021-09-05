@@ -52,13 +52,13 @@ CFLAGS =  \
 -usrinc:"\"..;\"" -NOmultithread -NOpadbranch -debug -cpu:EZ80F91  \
 -asmsw:"   \
 	-define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG  \
-	-include:\"..;..\..\ez80f91bsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"  \
+	-include:\"..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"  \
 	-list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn  \
 	-debug -NOigcase -cpu:EZ80F91"
 
 ASFLAGS =  \
 -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG  \
--include:"\"..;..\..\ez80f91bsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
+-include:"\"..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
 -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt  \
 -warn -debug -NOigcase -cpu:EZ80F91
 
@@ -172,9 +172,9 @@ $(WORKDIR_ESCSPACE)\CAMLF91e.obj :  \
             $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91.inc  \
-            Z:\workspace\ez80f91bsp\inc\bsp.inc  \
-            Z:\workspace\ez80f91bsp\inc\macros.inc  \
-            Z:\workspace\ez80f91bsp\inc\uart.inc
+            $(PRJDIR_ESCSPACE)\libbsp\inc\bsp.inc  \
+            $(PRJDIR_ESCSPACE)\libbsp\inc\macros.inc  \
+            $(PRJDIR_ESCSPACE)\libbsp\inc\uart.inc
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91e.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91h.obj :  \

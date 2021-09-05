@@ -190,8 +190,9 @@ dodoes: ; -- a-addr
 ;C EMIT     c --    output character to console
 
     head EMIT,{"EMIT"},docode
-		ld		a,c
+$$:		ld		a,c
 		call	uart0_putc
+		jr		z,$B
         POP     BC
         next
 

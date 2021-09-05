@@ -19,7 +19,7 @@
 <tool name="Assembler">
 <options>
 <option name="define" type="string" change-action="assemble">FLASHED=0,_EZ80ACCLAIM!=1,_DEBUG</option>
-<option name="include" type="string" change-action="assemble">..\ez80f91bsp\inc</option>
+<option name="include" type="string" change-action="assemble">libbsp\inc</option>
 <option name="list" type="boolean" change-action="none">true</option>
 <option name="listmac" type="boolean" change-action="none">true</option>
 <option name="name" type="boolean" change-action="none">true</option>
@@ -111,7 +111,7 @@ DEFINE __len_code = length of CODE</option>
 <option name="linkctlfile" type="string" change-action="build">.\asm</option>
 <option name="map" type="boolean" change-action="none">true</option>
 <option name="maxhexlen" type="integer" change-action="build">64</option>
-<option name="objlibmods" type="string" change-action="build">..\ez80f91bsp\Debug\libbsp.lib</option>
+<option name="objlibmods" type="string" change-action="build">libbsp\libbspd.lib</option>
 <option name="of" type="string" change-action="build">Debug\camel_f91</option>
 <option name="quiet" type="boolean" change-action="none">false</option>
 <option name="relist" type="boolean" change-action="build">true</option>
@@ -552,16 +552,9 @@ DEFINE __len_code = length of CODE</option>
 <!-- breakpoint information -->
 <breakpoints>
 <breakpoint temporary="false" enabled="true" >
-<line-number>54</line-number>
+<line-number>45</line-number>
 <pathname>Z:\workspace\CAMELF91_24\asm\CAMLF91e.asm</pathname>
-<address>932</address>
-<command></command>
-<preserve-type>0</preserve-type>
-</breakpoint>
-<breakpoint temporary="false" enabled="true" >
-<line-number>54</line-number>
-<pathname>Z:\workspace\CAMELF91_24\asm\CAMLF91e.asm</pathname>
-<address>932</address>
+<address>923</address>
 <command></command>
 <preserve-type>0</preserve-type>
 </breakpoint>

@@ -12,13 +12,13 @@
 /* -usrinc:"\"..;\"" -NOmultithread -NOpadbranch -debug -cpu:EZ80F91 */
 /*-asmsw:"  */
 	/* -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG */
-	/* -include:\"..;..\..\ez80f91bsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\" */
+	/* -include:\"..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\" */
 	/* -list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn */
 	/* -debug -NOigcase -cpu:EZ80F91" */
 
 /* assembler options */
 /* -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG */
-/* -include:"\"..;..\..\ez80f91bsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
+/* -include:"\"..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
 /* -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt */
 /* -warn -debug -NOigcase -cpu:EZ80F91 */
 
@@ -86,7 +86,7 @@ DEFINE __len_code = length of CODE
  ".\cstartup.obj", \
  ".\init_params_f91.obj", \
  ".\vectors24.obj", \
- "Z:\workspace\ez80f91bsp\Debug\libbsp.lib", \
+ "Z:\workspace\CAMELF91_24\libbsp\libbspd.lib", \
  "Z:\ZDSII_eZ80Acclaim!_5.3.4\lib\std\chelpD.lib", \
  "Z:\ZDSII_eZ80Acclaim!_5.3.4\lib\zilog\zsldevinitdummy.obj"
 
