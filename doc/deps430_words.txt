@@ -1,0 +1,20 @@
+;x   NAME     stack -- stack    description
+;C ALIGN    --                         align HERE
+;C ALIGNED  addr -- a-addr       align given addr
+;Z CELL     -- n                 size of one cell
+;C CELL+    a-addr1 -- a-addr2      add cell size
+;C CELLS    n1 -- n2            cells->adrs units
+;C CHAR+    c-addr1 -- c-addr2   add char size
+;C CHARS    n1 -- n2            chars->adrs units
+;C >BODY    xt -- a-addr      adrs of CREATE data
+;X COMPILE,  xt --         append execution token
+;Z !CF    adrs cfa --   set code action of a word
+;Z ,CF    adrs --       append a code field
+;Z ,CALL  adrs --       append a subroutine CALL
+;Z ,JMP   adrs --       append an absolute 16-bit JMP  (MOV #xx,PC)
+;Z !COLON   --      change code field to DOCOLON
+;Z ,EXIT    --      append hi-level EXIT action
+;Z ,BRANCH   xt --    append a branch instruction
+;Z ,DEST   dest --        append a branch address
+;Z !DEST   dest adrs --    change a branch dest'n
+;Z ,NONE   --              append a null destination (Flashable)

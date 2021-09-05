@@ -1,7 +1,7 @@
-
-Debug/*
-Release/*
-Chiponly/*
+**/DebugTrace/*
+**/Debug/*
+**/Release/*
+**/Chiponly/*
 
 !*/camel_f91_*.linkcmd
 !*/camel_f91_*.mak

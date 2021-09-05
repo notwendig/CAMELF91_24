@@ -1,0 +1,86 @@
+;C EXECUTE   i*x xt -- j*x   execute Forth word
+;C                           at 'xt'
+;Z lit      -- x    fetch inline literal to stack
+;C EXIT     --            exit a colon definition
+;C VARIABLE --            define a Forth VARIABLE
+;C CONSTANT --            define a Forth constant
+;Z USER     n --        define user variable 'n'
+;C DUP      x -- x x      duplicate top of stack
+;C ?DUP     x -- 0 | x x    DUP if nonzero
+;C DROP     x --          drop top of stack
+;C SWAP     x1 x2 -- x2 x1    swap top two items
+;C OVER    x1 x2 -- x1 x2 x1   per stack diagram
+;C ROT    x1 x2 x3 -- x2 x3 x1  per stack diagram
+;X NIP    x1 x2 -- x2           per stack diagram
+;C >R    x --   R: -- x   push to return stack
+;C R>    -- x    R: x --   pop from return stack
+;C R@    -- x     R: x -- x   fetch from rtn stk
+;Z SP@  -- a-addr       get data stack pointer
+;Z SP!  a-addr --       set data stack pointer
+;Z RP@  -- a-addr       get return stack pointer
+;Z RP!  a-addr --       set return stack pointer
+;X TUCK   x1 x2 -- x2 x1 x2     per stack diagram
+;C @       a-addr -- x   fetch cell from memory
+;C !        x a-addr --   store cell in memory
+;C C@     c-addr -- char   fetch char from memory
+;C C!      char c-addr --    store char in memory
+;Z FLERASE  a-addr n -- 
+;Z I!        x a-addr --   store cell in Instruction memory
+;Z IC!        x a-addr --   store char in Instruction memory
+;Z I@       a-addr -- x   fetch cell from Instruction memory
+;Z IC@       a-addr -- x   fetch char from Instruction memory
+;Z D->I     c-addr1 c-addr2 u --  move Data->Code
+;C +       n1/u1 n2/u2 -- n3/u3     add n1+n2
+;C +!     n/u a-addr --       add cell to memory
+;X M+       d n -- d         add single to double
+;C -      n1/u1 n2/u2 -- n3/u3    subtract n1-n2
+;C AND    x1 x2 -- x3            logical AND
+;C OR     x1 x2 -- x3           logical OR
+;C XOR    x1 x2 -- x3            logical XOR
+;C INVERT   x1 -- x2            bitwise inversion
+;C NEGATE   x1 -- x2            two's complement
+;C 1+      n1/u1 -- n2/u2       add 1 to TOS
+;C 1-      n1/u1 -- n2/u2     subtract 1 from TOS
+;Z ><      x1 -- x2         swap bytes (not ANSI)
+;C 2*      x1 -- x2         arithmetic left shift
+;C 2/      x1 -- x2        arithmetic right shift
+;C LSHIFT  x1 u -- x2    logical L shift u places
+;C RSHIFT  x1 u -- x2    logical R shift u places
+;C 0=     n/u -- flag    return true if TOS=0
+;C 0<     n -- flag      true if TOS negative
+;C =      x1 x2 -- flag         test x1=x2
+;X <>     x1 x2 -- flag    test not eq (not ANSI)
+;C <      n1 n2 -- flag        test n1<n2, signed
+;C >     n1 n2 -- flag         test n1>n2, signed
+;C U<    u1 u2 -- flag       test u1<u2, unsigned
+;X U>    u1 u2 -- flag     u1>u2 unsgd (not ANSI)
+;Z branch   --                  branch always
+;Z ?branch   x --              branch if TOS zero
+;Z (do)    n1|u1 n2|u2 --  R: -- sys1 sys2
+;Z                          run-time code for DO
+;Z (loop)   R: sys1 sys2 --  | sys1 sys2
+;Z                        run-time code for LOOP
+;Z (+loop)   n --   R: sys1 sys2 --  | sys1 sys2
+;Z                        run-time code for +LOOP
+;C I        -- n   R: sys1 sys2 -- sys1 sys2
+;C                  get the innermost loop index
+;C J        -- n   R: 4*sys -- 4*sys
+;C                  get the second loop index
+;C UNLOOP   --   R: sys1 sys2 --  drop loop parms
+;C UM*     u1 u2 -- ud   unsigned 16x16->32 mult.
+;C UM/MOD   ud u1 -- u2 u3   unsigned 32/16->16
+;C FILL   c-addr u char --  fill memory with char
+;X CMOVE   c-addr1 c-addr2 u --  move from bottom
+;X CMOVE>  c-addr1 c-addr2 u --  move from top
+;Z I->D     c-addr1 c-addr2 u --  move Code->Data
+;Z SKIP   c-addr u c -- c-addr' u'
+;Z                          skip matching chars
+;Z SCAN    c-addr u c -- c-addr' u'
+;Z                      find matching char
+;Z S=    c-addr1 c-addr2 u -- n   string compare
+;Z             n<0: s1<s2, n=0: s1=s2, n>0: s1>s2
+;Z N=    c-addr1 c-addr2 u -- n   name compare
+;Z             n<0: s1<s2, n=0: s1=s2, n>0: s1>s2
+;C EMIT     c --    output character to console
+;C KEY      -- c      get character from keyboard
+;X KEY?     -- f    return true if char waiting
