@@ -1,3 +1,4 @@
 [submodule "libbsp"]
 	path = libbsp
 	url = git@github.com:notwendig/ez80f91bsp.git
+	branch = emac
