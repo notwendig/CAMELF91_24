@@ -8,17 +8,18 @@
 /* -define:_EZ80F91 -define:_EZ80ACCLAIM! -genprintf -keepasm */
 /* -keeplst -NOlist -NOlistinc -NOmodsect -optsize -promote */
 /* -NOreduceopt */
-/* -stdinc:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
-/* -usrinc:"\"..;\"" -NOmultithread -NOpadbranch -debug -cpu:EZ80F91 */
+/* -stdinc:"\"..\..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
+/* -usrinc:"\"..\..;\"" -NOmultithread -NOpadbranch -debug */
+/* -cpu:EZ80F91 */
 /*-asmsw:"  */
 	/* -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG */
-	/* -include:\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\" */
+	/* -include:\"..\..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\" */
 	/* -list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn */
 	/* -debug -NOigcase -cpu:EZ80F91" */
 
 /* assembler options */
 /* -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG */
-/* -include:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
+/* -include:"\"..\..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"" */
 /* -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt */
 /* -warn -debug -NOigcase -cpu:EZ80F91 */
 
@@ -64,6 +65,7 @@ define __PLL_CTL0_INIT_PARAM = $40
 /* additional user-defined directives */
 ORDER .RESET,.IVECTS,.STARTUP,CODE,DATA
 COPY DATA ROM
+DEFINE __copy_code_to_ram = 0
 DEFINE __low_romdata = copy base of DATA
 DEFINE __low_data = base of DATA
 DEFINE __len_data = length of DATA
@@ -82,8 +84,10 @@ DEFINE __len_code = length of CODE
  ".\CAMLF91e.obj", \
  ".\CAMLF91h.obj", \
  ".\CAMLF91t.obj", \
+ ".\cstartup.obj", \
  ".\init_params_f91.obj", \
  ".\vectors24.obj", \
+ "Z:\workspace\CAMELF91_24\libbsp\libbspd.lib", \
  "Z:\ZDSII_eZ80Acclaim!_5.3.4\lib\std\chelpD.lib", \
  "Z:\ZDSII_eZ80Acclaim!_5.3.4\lib\zilog\zsldevinitdummy.obj"
 

@@ -48,17 +48,18 @@ CFLAGS =  \
 -define:_EZ80F91 -define:_EZ80ACCLAIM! -genprintf -keepasm  \
 -keeplst -NOlist -NOlistinc -NOmodsect -optsize -promote  \
 -NOreduceopt  \
--stdinc:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
--usrinc:"\"..;\"" -NOmultithread -NOpadbranch -debug -cpu:EZ80F91  \
+-stdinc:"\"..\..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
+-usrinc:"\"..\..;\"" -NOmultithread -NOpadbranch -debug  \
+-cpu:EZ80F91  \
 -asmsw:"   \
 	-define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG  \
-	-include:\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"  \
+	-include:\"..\..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\"  \
 	-list -listmac -pagelen:0 -pagewidth:132 -quiet -sdiopt -warn  \
 	-debug -NOigcase -cpu:EZ80F91"
 
 ASFLAGS =  \
 -define:FLASHED=0 -define:_EZ80ACCLAIM!=1 -define:_DEBUG  \
--include:"\"..;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
+-include:"\"..\..;..\libbsp\inc;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\std;Z:\ZDSII_eZ80Acclaim!_5.3.4\include\zilog\""  \
 -list -listmac -name -pagelen:0 -pagewidth:132 -quiet -sdiopt  \
 -warn -debug -NOigcase -cpu:EZ80F91
 
@@ -108,6 +109,12 @@ clean:
             $(RM) "$(WORKDIR)\CAMLF91t.lis"
 	@if exist "$(WORKDIR)\CAMLF91t.lst"  \
             $(RM) "$(WORKDIR)\CAMLF91t.lst"
+	@if exist "$(WORKDIR)\cstartup.obj"  \
+            $(RM) "$(WORKDIR)\cstartup.obj"
+	@if exist "$(WORKDIR)\cstartup.lis"  \
+            $(RM) "$(WORKDIR)\cstartup.lis"
+	@if exist "$(WORKDIR)\cstartup.lst"  \
+            $(RM) "$(WORKDIR)\cstartup.lst"
 	@if exist "$(WORKDIR)\init_params_f91.obj"  \
             $(RM) "$(WORKDIR)\init_params_f91.obj"
 	@if exist "$(WORKDIR)\init_params_f91.lis"  \
@@ -131,6 +138,8 @@ relist:
 	$(AS) $(ASFLAGS) -relist:"Z:\workspace\CAMELF91_24\DebugTrace\camel_f91.map" \
             Z:\workspace\CAMELF91_24\asm\CAMLF91t.asm
 	$(AS) $(ASFLAGS) -relist:"Z:\workspace\CAMELF91_24\DebugTrace\camel_f91.map" \
+            Z:\workspace\CAMELF91_24\asm\cstartup.asm
+	$(AS) $(ASFLAGS) -relist:"Z:\workspace\CAMELF91_24\DebugTrace\camel_f91.map" \
             Z:\workspace\CAMELF91_24\asm\init_params_f91.asm
 	$(AS) $(ASFLAGS) -relist:"Z:\workspace\CAMELF91_24\DebugTrace\camel_f91.map" \
             Z:\workspace\CAMELF91_24\asm\vectors24.asm
@@ -145,6 +154,7 @@ OBJS =  \
             $(WORKDIR_ESCSPACE)\CAMLF91e.obj  \
             $(WORKDIR_ESCSPACE)\CAMLF91h.obj  \
             $(WORKDIR_ESCSPACE)\CAMLF91t.obj  \
+            $(WORKDIR_ESCSPACE)\cstartup.obj  \
             $(WORKDIR_ESCSPACE)\init_params_f91.obj  \
             $(WORKDIR_ESCSPACE)\vectors24.obj
 
@@ -162,7 +172,8 @@ $(WORKDIR_ESCSPACE)\CAMLF91e.obj :  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91e.asm  \
             $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
-            $(PRJDIR_ESCSPACE)\asm\CAMLF91.inc
+            $(PRJDIR_ESCSPACE)\asm\CAMLF91.inc  \
+            $(PRJDIR_ESCSPACE)\libbsp\inc\console.inc
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91e.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91h.obj :  \
@@ -178,6 +189,10 @@ $(WORKDIR_ESCSPACE)\CAMLF91t.obj :  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91.inc
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91t.asm"
+
+$(WORKDIR_ESCSPACE)\cstartup.obj :  \
+            $(PRJDIR_ESCSPACE)\asm\cstartup.asm
+	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\cstartup.asm"
 
 $(WORKDIR_ESCSPACE)\init_params_f91.obj :  \
             $(PRJDIR_ESCSPACE)\asm\init_params_f91.asm  \

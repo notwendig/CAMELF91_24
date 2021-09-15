@@ -32,10 +32,12 @@
 	.list off
     .INCLUDE "eZ80F91.INC"    ; CPU Equates
 	.INCLUDE "intvect.inc"
-	.INCLUDE "bsp.inc"
+	.INCLUDE "console.inc"
 	.list on
 	.INCLUDE "CAMLF91.INC"
-
+	
+	xref	init_bsp
+	
 	SEGMENT CODE
 	.ASSUME ADL=1
 
@@ -191,7 +193,7 @@ dodoes: ; -- a-addr
 
     head EMIT,{"EMIT"},docode
 $$:		ld		a,c
-		call	uart0_putc
+		call	putc
 		jr		z,$B
         POP     BC
         next
@@ -200,7 +202,7 @@ $$:		ld		a,c
     head QUERYKEY,{"KEY?"},docode
         PUSH 	BC     					; PREPARE FOR NEW TOS
 		ld		bc,0
-		call	uart0_kbhit
+		call	kbhit
 		jr		z,$F
 		dec		bc
 $$:     next
@@ -208,7 +210,7 @@ $$:     next
 ;C KEY      -- c    get character from keyboard
     head KEY,{"KEY"},docode
         PUSH 	BC     					;PREPARE FOR NEW TOS
-        call	uart0_getc
+        call	getc
 		ld		bc,0
         LD 		C,A      				; RESULT IN TOS
         next
