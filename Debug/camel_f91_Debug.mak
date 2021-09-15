@@ -172,9 +172,7 @@ $(WORKDIR_ESCSPACE)\CAMLF91e.obj :  \
             $(INCLUDE_ESCSPACE)\zilog\ez80F91.inc  \
             $(INCLUDE_ESCSPACE)\zilog\intvect.inc  \
             $(PRJDIR_ESCSPACE)\asm\CAMLF91.inc  \
-            $(PRJDIR_ESCSPACE)\libbsp\inc\bsp.inc  \
-            $(PRJDIR_ESCSPACE)\libbsp\inc\macros.inc  \
-            $(PRJDIR_ESCSPACE)\libbsp\inc\uart.inc
+            $(PRJDIR_ESCSPACE)\libbsp\inc\console.inc
 	 $(AS) $(ASFLAGS) "$(PRJDIR)\asm\CAMLF91e.asm"
 
 $(WORKDIR_ESCSPACE)\CAMLF91h.obj :  \
