@@ -28,9 +28,7 @@
 ;   12 MAY 2003 v1.10e for eZ80 Acclaim, ZDS II (ZiLOG) XTools
 ;   23 JAN 2004 v1.00e for eZ80F91
 ;	01 APR 2021 v1.00e-24bit for eZ80F91 JSievers@NadiSoft.de
-
-	.list off
-    .INCLUDE "eZ80F91.INC"    ; CPU Equates
+ 
 	.INCLUDE "intvect.inc"
 	.INCLUDE "console.inc"
 	.list on

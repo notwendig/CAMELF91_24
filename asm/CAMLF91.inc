@@ -16,29 +16,29 @@
 ENDOFMEM EQU __stack
 
 VERSION MACRO
-	DB "1.00e (24bit) - "
+	DB "1.1.0 (24bit) - "
 ifdef _CHIPONLY
 	DB 'Chiponly'
 else
 ifdef _DEBUG
 	DB 'Debug'
 else
-ifdef _RELEASE	
+ifdef _RELEASE
 	DB 'Release'
 else
 #error
 endif
 endif
 endif
-	DB ", 13 APR 2021",0Dh,0Ah
+	DB ", 16.09.2021 12:31:21 CEST",0Dh,0Ah
 	ENDMACRO
 
 ; frequency must be set properly for baud rate to
 ; be initialized correctly.
-	xref _SYS_CLK_FREQ 
+	xref _SYS_CLK_FREQ
 	; void * _set_vector(unsigned int vector, void(*handler)(void));
 	xref _set_vector
-	
+
 ; ********************************************************
 ; *** SET UP SERIAL COMMUNICATIONS WITH HOST.
 ; *** UART0
@@ -150,8 +150,8 @@ nexthl  MACRO
  XREF user0
  XREF __heapbot
  XREF __heaptop
-	
-enddict	equ __heapbot		    ; user's code starts here	
+
+enddict	equ __heapbot		    ; user's code starts here
 
  XREF lastword
 
@@ -161,7 +161,7 @@ __HOLDP	EQU __PAD
 __PAD	EQU	__L0-PADBUFFERSZ	; PAD buffer, 88 bytes
 __L0	EQU	__R0-LEAVESTACKSZ-RETNSTACKSZ
 __R0 	EQU ENDOFMEM		; Return stack, 128 B, grows down
-	
+
  XREF		ENTRY                ;  CAMELF91E
  XREF		dbg                  ;  CAMELF91E
  XREF		EXIT                 ;  CAMELF91E
