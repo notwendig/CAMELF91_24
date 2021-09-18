@@ -1,4 +1,4 @@
-<project type="Executable" project-type="Standard" configuration="Release" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
+<project type="Executable" project-type="Standard" configuration="Debug" created-by="d:5.3.0:19052909" modified-by="d:5.3.0:19052909" ZDSII="ZDSII - eZ80Acclaim! 5.3.4 (Build 19112104)">
 <cpu>EZ80F91</cpu>
 
 <!-- file information -->
@@ -555,7 +555,7 @@ DEFINE __len_code = length of CODE</option>
 <!-- breakpoint information -->
 <breakpoints>
 <breakpoint temporary="false" enabled="true" >
-<line-number>47</line-number>
+<line-number>45</line-number>
 <pathname>Z:\workspace\CAMELF91_24\asm\CAMLF91e.asm</pathname>
 <address>0</address>
 <command></command>
