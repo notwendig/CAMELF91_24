@@ -3,8 +3,5 @@
 **/Release/*
 **/Chiponly/*
 
-!*/camel_f91_*.linkcmd
-!*/camel_f91_*.mak
-
 /camel_f91.wsp
 /*.tar.gz

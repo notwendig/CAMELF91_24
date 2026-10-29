@@ -31,11 +31,18 @@
  
 	.INCLUDE "intvect.inc"
 	.INCLUDE "console.inc"
+	.INCLUDE "uart.inc"
 	.list on
 	.INCLUDE "CAMLF91.INC"
 	
 	xref	init_bsp
 	
+	SEGMENT TEXT
+; UART0 configuration for the BSP console, 115200 8N1.
+camel_uart0cfg:
+	dw (_SYS_CLK_FREQ / 115200) / 16
+	db LCTL_CHAR_8_1,230,20,230,20
+
 	SEGMENT CODE
 	.ASSUME ADL=1
 
@@ -43,6 +50,8 @@ link    .SET 0     ; link to previous Forth word
 
 	XDEF _main
 _main:			call	init_bsp
+	ld iy,camel_uart0cfg
+	call init_uart0
 	
     ;forth program ENTRY POINT
 	xdef ENTRY
@@ -429,10 +438,21 @@ $$:		jp		(hl)
         ex 		de,hl
         pop 	de          			; hi cell
         ex 		(sp),hl      			; lo cell, save IP
-        add 	hl,bc
-        ld 		bc,de        			; hi result in BC (TOS)
-        jr 		nc,mplus1
-        inc 	bc
+        ; Save the sign extension of the signed 24-bit addend.
+        push hl
+        ld hl,7fffffh
+        or a
+        sbc hl,bc
+        pop hl
+        push af
+        add hl,bc
+        ld bc,de
+        jr nc,mplus_carry_done
+        inc bc
+mplus_carry_done:
+        pop af
+        jr nc,mplus1
+        dec bc
 mplus1: pop 	de          			; restore saved IP
         push 	hl        	 			; push lo result
         next

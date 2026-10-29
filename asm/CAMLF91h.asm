@@ -283,16 +283,18 @@ DNEG1:  DW24 EXIT
         DW24 EXIT
 
 ;C FM/MOD   d1 n1 -- n2 n3   floored signed div'n
-;   DUP >R              save divisor
-;   SM/REM
-;   DUP 0< IF           if quotient negative,
-;       SWAP R> +         add divisor to rem'dr
-;       SWAP 1-           decrement quotient
-;   ELSE R> DROP THEN ;
+;   DUP >R SM/REM
+;   OVER IF
+;       OVER R@ XOR 0< IF
+;           SWAP R> + SWAP 1- EXIT
+;       THEN
+;   THEN R> DROP ;
 ; Ref. dpANS-6 section 3.2.2.1.
     head FMSLASHMOD,{"FM/MOD"},docolon
         DW24 DUP,TOR,SMSLASHREM
-        DW24 DUP,ZEROLESS,QBRANCH,FMMOD1
+        ; Floor only a non-exact division whose remainder has the wrong sign.
+        DW24 OVER,QBRANCH,FMMOD1
+        DW24 OVER,RFETCH,XOR,ZEROLESS,QBRANCH,FMMOD1
         DW24 SWOP,RFROM,PLUS,SWOP,ONEMINUS
         DW24 BRANCH,FMMOD2
 FMMOD1: DW24 RFROM,DROP
@@ -421,22 +423,26 @@ UMIN1:  DW24 DROP,EXIT
 UMAX1:  DW24 DROP,EXIT
 
 ;C ACCEPT  c-addr +n -- +n'  get line from term'l
-;   OVER + 1- OVER      -- sa ea a
-;   BEGIN KEY           -- sa ea a c
-;   DUP 0D <> WHILE
-;       DUP EMIT        -- sa ea a c
-;       DUP 8 = IF  DROP 1-    >R OVER R> UMAX
-;             ELSE  OVER C! 1+ OVER UMIN
-;       THEN            -- sa ea a
-;   REPEAT              -- sa ea a c
-;   DROP NIP SWAP - ;
+;   OVER + OVER          -- start end-exclusive current
+;   BEGIN KEY DUP 0D <> WHILE
+;       DUP EMIT DUP 8 = IF
+;           DROP >R OVER R> 2DUP U< IF 1- THEN NIP
+;       ELSE >R 2DUP SWAP U< IF
+;           R> OVER C! 1+ ELSE R> DROP THEN
+;       THEN
+;   REPEAT DROP NIP SWAP - ;
     head ACCEPT,{"ACCEPT"},docolon
-        DW24 OVER,PLUS,ONEMINUS,OVER
+        ; End is exclusive: accept all n bytes without writing at end.
+        DW24 OVER,PLUS,OVER
 ACC1:   DW24 KEY,DUP,LIT,0DH,NOTEQUAL,QBRANCH,ACC5
         DW24 DUP,EMIT,DUP,LIT,8,EQUAL,QBRANCH,ACC3
-        DW24 DROP,ONEMINUS,TOR,OVER,RFROM,UMAX
-        DW24 BRANCH,ACC4
-ACC3:   DW24 OVER,CSTORE,ONEPLUS,OVER,UMIN
+        ; Backspace stops at start, including start address zero.
+        DW24 DROP,TOR,OVER,RFROM,TWODUP,ULESS,QBRANCH,ACCBACK
+        DW24 ONEMINUS
+ACCBACK: DW24 NIP,BRANCH,ACC4
+ACC3:   DW24 TOR,TWODUP,SWOP,ULESS,QBRANCH,ACCFULL
+        DW24 RFROM,OVER,CSTORE,ONEPLUS,BRANCH,ACC4
+ACCFULL: DW24 RFROM,DROP
 ACC4:   DW24 BRANCH,ACC1
 ACC5:   DW24 DROP,NIP,SWOP,MINUS,EXIT
 
@@ -1074,9 +1080,9 @@ MOVE1:  DW24 RFROM,CMOVE
 MOVE2:  DW24 EXIT
 
 ;C DEPTH    -- +n        number of items on stack
-;   SP@ S0 SWAP - 2/ ;   16-BIT VERSION!
+;   SP@ S0 @ SWAP - 3 / ;   three-byte cells and a user-variable S0
     head DEPTH,{"DEPTH"},docolon
-        DW24 SPFETCH,S0,SWOP,MINUS,TWOSLASH,EXIT
+        DW24 SPFETCH,S0,FETCH,SWOP,MINUS,LIT,3,SLASH,EXIT
 
 ;C ENVIRONMENT?  c-addr u -- false   system query
 ;                         -- i*x true
@@ -1129,7 +1135,7 @@ $$:     DW24 TYPE,ABORT       ; ABORT never returns
 ;  D.R  dword nlen --       print dword in field nlen long
 ;
         head    DDOTR,{"D.R"},docolon
-        DW24      TOR,SWOP,OVER,DABS,LESSNUM,NUMS,SIGN
+        DW24      TOR,SWOP,OVER,DABS,LESSNUM,NUMS,ROT,SIGN
         DW24      NUMGREATER,RFROM,OVER,MINUS,SPACES,TYPE
         DW24      EXIT
 
@@ -1173,6 +1179,8 @@ DUMP7   DW24      EMIT
         DW24      LIT,16
         DW24      XPLUSLOOP,DUMP3
         DW24      CR,EXIT
+
+    .INCLUDE "kit.inc"
 
 	XDEF CAMEL91H_LAST
 CAMEL91H_LAST EQU link

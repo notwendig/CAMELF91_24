@@ -1,0 +1,5 @@
+*.md text eol=lf
+asm/*.asm -text
+asm/*.inc -text
+*.zdsproj -text
+*.ztgt -text
