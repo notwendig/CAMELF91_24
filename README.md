@@ -1,15 +1,14 @@
 # CAMELF91_24
 
-24-Bit-CamelForth für den **Zilog eZ80F91** und das eZ80F91 Development Kit.
-Das Projekt enthält die nativen ZDS-II-Konfigurationen sowie Forth-Wörter
-für die drei Taster und die 5×7-LED-Matrix.
+24-bit CamelForth for the **Zilog eZ80F91** development kit, with native ZDS II
+configurations, three-button input and a 5×7 LED matrix.
 
-## Voraussetzungen
+## Requirements and setup
 
-- Zilog Developer Studio II eZ80Acclaim! **5.3.5**;
-- das verschachtelte Submodul `libbsp/`;
-- ein eZ80F91 Development Kit oder die passende QEMU-eZ80F91-Umgebung;
-- UART0 mit 115200 Baud, 8N1; der native BSP-Treiber verwendet RTS/CTS.
+- Zilog Developer Studio II eZ80Acclaim! **5.3.5**.
+- Nested `libbsp/` submodule.
+- An eZ80F91 development kit or matching QEMU environment.
+- UART0 at 115200 baud, 8N1; the native driver uses RTS/CTS.
 
 ```sh
 git clone https://github.com/notwendig/CAMELF91_24.git
@@ -17,101 +16,89 @@ cd CAMELF91_24
 git submodule update --init -- libbsp
 ```
 
-Der BSP-Commit ist über die öffentliche HTTPS-Quelle erreichbar; eine lokale
-SSH-Hostdefinition wird nicht benötigt.
+The BSP revision is available through public HTTPS; no local SSH alias is required.
 
-## Bauen und starten
+## Build and run
 
-1. `libbsp/libbsp.zdsproj` in ZDS II öffnen und **Debug → Rebuild All** bauen.
-   Das Ergebnis heißt `libbspd.lib` im BSP-Verzeichnis.
-2. `camel_f91.zdsproj` öffnen, **Debug** auswählen und neu bauen.
-3. Das passende Board-Target und den Debugger wählen, `Debug/camel_f91.lod`
-   laden und mit **F5** fortsetzen.
-4. Nach dem Banner Befehle über UART0 eingeben.
+1. Open `libbsp/libbsp.zdsproj`; build **Debug → Rebuild All**, producing `libbspd.lib`.
+2. Open `camel_f91.zdsproj`, select **Debug** and rebuild.
+3. Select the board target/debugger, load `Debug/camel_f91.lod` and press **F5**.
+4. Enter Forth commands over UART0 after the banner.
 
-Der Projektstand verwendet für Debug Ethernet Smart Cable. Auf realer
-Hardware kann im ZDS-Debugger-Setup wieder USB Smart Cable gewählt werden.
-Das RAM-Debug-Target deaktiviert die externe Flash-Erkennung, da diese bei
-abgeschaltetem CS0 zu erfolglosen AMD-Flash-Proben ab 100000h führt.
+The maintained Debug configuration uses Ethernet Smart Cable. Physical targets
+may select USB Smart Cable. The RAM target disables external flash detection:
+with CS0 disabled, AMD probes beginning at 100000h cannot succeed.
 
-Unter Linux mit Wine kann nach Erstellung der ZDS-Make-Datei auch gebaut werden:
+After ZDS generates its makefile, Linux/Wine builds are also supported:
 
 ```sh
 make
-make ZDS_HOME=/pfad/zu/ZDSII_eZ80Acclaim!_5.3.5
+make ZDS_HOME=/path/to/ZDSII_eZ80Acclaim!_5.3.5
 make clean
 ```
 
-`BUILD` wählt die Konfiguration; Standard ist `Debug`. Der Wrapper reicht
-Buildfehler trotz Ausgabefilterung zuverlässig an den Aufrufer weiter.
-Die `.mak`-/`.linkcmd`-Dateien in den Konfigurationsverzeichnissen werden von
-ZDS erzeugt und nicht versioniert; die Projekt-/Targetdateien bleiben die
-maßgebliche Konfiguration.
+`BUILD` selects the configuration, default Debug. The wrapper preserves build
+failure status despite filtering output. Generated `.mak`/`.linkcmd` files are
+not tracked; project/target files are authoritative.
 
-## Konfigurationen und Speicher
+## Configurations
 
-| Konfiguration | Code | Daten |
+| Configuration | Code | Data |
 | --- | --- | --- |
-| Debug | Externes SRAM als Code bei 000000h–07FFFFh | Interner RAM ab B7D000h und externes SRAM bis BFFFFFh |
-| Release | Interner Flash | Interner und externer RAM gemäß Release-Linkerdatei |
-| Chiponly | Interner Flash | Interner RAM gemäß Chiponly-Linkerdatei |
-| DebugTrace | Debug-RAM-Profil mit Trace-Code | Gemäß DebugTrace-Linkerdatei |
+| Debug | External SRAM 000000h–07FFFFh | Internal RAM from B7D000h and external RAM to BFFFFFh |
+| Release | Internal flash | Internal/external RAM per linker settings |
+| Chiponly | Internal flash | Internal RAM per linker settings |
+| DebugTrace | Debug RAM with trace code | Per DebugTrace linker settings |
 
-Die ausführlich getestete Emulator-Konfiguration ist **Debug**. Andere
-Konfigurationen besitzen eigene Linker-/Targetdateien und müssen passend
-zur tatsächlichen Hardware geprüft werden.
+Debug is the thoroughly tested emulator profile. Other configurations require
+validation against their actual hardware and target settings.
 
-## Forth verwenden
+## Forth and kit
 
 ```forth
 1 2 + .
-: QUADRAT DUP * ;
-12 QUADRAT .
+: SQUARE DUP * ;
+12 SQUARE .
 BUTTONS .
 1 BUTTON? .
 CHAR A MATRIX-CHAR
 MATRIX-OFF
 ```
 
-| Wort | Bedeutung |
+| Word | Meaning |
 | --- | --- |
-| `BUTTONS` | Drückmaske 0..7: SW1=1, SW2=2, SW3=4 |
-| `BUTTON?` | Nummer 1..3 → -1 bei gedrücktem Taster, sonst 0 |
-| `SW1?` `SW2?` `SW3?` | Direkte Tasterabfragen |
-| `MATRIX-CHAR` | ASCII 32..126 anzeigen; startet den Timer1-Hintergrundscan |
-| `MATRIX!` | Sieben Zeilenbytes eines eigenen Bitmaps kopieren |
-| `MATRIX-CLEAR` | Bild löschen, Hintergrundscan weiter betreiben |
-| `MATRIX-OFF` | Bild löschen und Timer1 anhalten |
+| `BUTTONS` | Mask 0–7: SW1=1, SW2=2, SW3=4 |
+| `BUTTON?` | Button 1–3; -1 pressed, otherwise 0 |
+| `SW1?` `SW2?` `SW3?` | Direct button queries |
+| `MATRIX-CHAR` | ASCII 32–126; starts Timer1 scanning |
+| `MATRIX!` | Copy seven bitmap row bytes |
+| `MATRIX-CLEAR` | Clear image, keep scanning |
+| `MATRIX-OFF` | Clear image and stop Timer1 |
 
-Pro Bitmapzeile sind die unteren fünf Bits aktiv High; Bit 4 ist links.
-Die Abfragen liefern den momentanen Tasterzustand ohne Software-Entprellung.
-Während der Anzeige gehört Timer1 dem Matrix-Treiber. `BUTTON-INIT` und
-`MATRIX-INIT` stehen auch für eine explizite Initialisierung bereit.
+Each row uses five active-high bits; bit 4 is left. Button queries are instantaneous
+without debouncing. Timer1 belongs to the matrix while scanning. `BUTTON-INIT`
+and `MATRIX-INIT` provide explicit initialization.
 
-## Quellstruktur und Korrekturen
+## Sources and corrections
 
-- `asm/CAMLF91e.asm`: primitive Wörter und nativer BSP-/UART-Start;
-- `asm/CAMLF91d.asm`: Zellbreite, Codefelder und Compilerhilfen;
-- `asm/CAMLF91h.asm`: High-Level-Wörter und Einbindung des Kit-Treibers;
-- `asm/kit.inc`, `asm/kit_font.inc`: Taster, Timer1-Matrix und Zeichensatz;
-- `asm/cstartup.asm`, `asm/init_params_f91.asm`, `asm/vectors24.asm`: Boardstart;
-- `libbsp/`: getrennte Assembler-Bibliothek.
+- `asm/CAMLF91e.asm`: primitives and native BSP/UART startup.
+- `asm/CAMLF91d.asm`: cell width, code fields and compiler helpers.
+- `asm/CAMLF91h.asm`: high-level words and kit inclusion.
+- `asm/kit.inc`, `asm/kit_font.inc`: buttons, Timer1 matrix and font.
+- `asm/cstartup.asm`, `asm/init_params_f91.asm`, `asm/vectors24.asm`: startup.
+- `libbsp/`: separate assembly library.
 
-Der 24-Bit-Kern korrigiert `DEPTH`, `FM/MOD`, `M+`, `ACCEPT` und die
-Vorzeichenbehandlung von `D.R`/`.R`. Der native Start initialisiert UART0
-explizit, bevor die erste Forth-Ausgabe erfolgt.
+The core corrects DEPTH, FM/MOD, M+, ACCEPT and D.R/.R sign formatting.
+Native startup explicitly initializes UART0 before output. Define `KIT` to
+include kit words in the native assembly configuration.
 
-## Emulator und Tests
+## Emulator tests
 
-Das begleitende [qemuez80f91-Projekt](https://github.com/notwendig/qemuez80f91)
-enthält einen reproduzierbaren Polling-Build, 89 Reset-Regressionen, den
-vollständigen 237-Wörter-Test mit 201 Ergebnisprüfungen sowie Kit-Tests.
-Dort liegen Bedienung, Build-Metadaten und ausführliche Fehleranalysen.
-Quellkopien für den Polling-Build werden außerhalb dieses Checkouts erzeugt.
+The [qemuez80f91 workspace](https://github.com/notwendig/qemuez80f91) provides a
+polling build, 89 before/after-reset cases, 237-word coverage with 201 checks,
+and kit tests. Its builder reads corrected commit `af47e65` directly and creates
+output outside this checkout; it does not apply separate workspace core patches.
 
-## Ursprung und Nutzungshinweise
-
-Die ursprünglichen Port-/Lizenzhinweise bleiben in [ReadMe.txt](ReadMe.txt),
-[LICENSE](LICENSE) und den Quellköpfen erhalten. Insbesondere enthält der
-CamelForth-Ursprung gesonderte Hinweise zur persönlichen, pädagogischen und
-kommerziellen Nutzung. Dieses README ersetzt diese Hinweise nicht.
+Original notices remain in [ReadMe.txt](ReadMe.txt), [LICENSE](LICENSE) and source
+headers. CamelForth's original personal, educational and commercial usage terms
+remain authoritative; this README does not replace them.
