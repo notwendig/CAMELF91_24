@@ -1180,7 +1180,9 @@ DUMP7   DW24      EMIT
         DW24      XPLUSLOOP,DUMP3
         DW24      CR,EXIT
 
+ifdef QEMUW
     .INCLUDE "kit.inc"
+endif ; QEMUW
 
 	XDEF CAMEL91H_LAST
 CAMEL91H_LAST EQU link
