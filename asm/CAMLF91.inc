@@ -11,12 +11,19 @@
 ; be directed to the author at 115 First St.,
 ; #105, Collingwood, Ontario L9Y 4W3, Canada
 ;
-	XREF __stack
-
+ifdef CAMEL_FREERTOS
+    XREF _camel_ram, _camel_task_stack
+ENDOFMEM EQU _camel_ram+10000h
+else
+    XREF __stack
 ENDOFMEM EQU __stack
+endif
 
 VERSION MACRO
 	DB "1.1.0 (24bit) - "
+ifdef CAMEL_FREERTOS
+    DB "FreeRTOS"
+else
 ifdef _CHIPONLY
 	DB 'Chiponly'
 else
@@ -30,6 +37,7 @@ else
 endif
 endif
 endif
+endif ; CAMEL_FREERTOS
 	DB ", 16.09.2021 12:31:21 CEST",0Dh,0Ah
 	ENDMACRO
 
@@ -148,15 +156,24 @@ nexthl  MACRO
  XREF InpBuffer
  XREF docreate
  XREF user0
+ifdef CAMEL_FREERTOS
+enddict equ _camel_ram
+else
  XREF __heapbot
  XREF __heaptop
-
-enddict	equ __heapbot		    ; user's code starts here
+enddict equ __heapbot		    ; user's code starts here
+endif ; CAMEL_FREERTOS
 
  XREF lastword
 
+ifdef CAMEL_FREERTOS
+; The hardware stack is the very stack registered with the FreeRTOS TCB.
+__FORTH0 EQU _camel_task_stack
+__S0 EQU _camel_task_stack+3072
+else
 __FORTH0 EQU __S0-PARASTACKSZ
-__S0	EQU __PAD-HOLDSTACKSZ	;40
+__S0 EQU __PAD-HOLDSTACKSZ	;40
+endif ; CAMEL_FREERTOS
 __HOLDP	EQU __PAD
 __PAD	EQU	__L0-PADBUFFERSZ	; PAD buffer, 88 bytes
 __L0	EQU	__R0-LEAVESTACKSZ-RETNSTACKSZ

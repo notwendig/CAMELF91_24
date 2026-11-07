@@ -30,11 +30,27 @@
 ;	01 APR 2021 v1.00e-24bit for eZ80F91 JSievers@NadiSoft.de
  
 	.INCLUDE "intvect.inc"
-	.INCLUDE "console.inc"
-	.INCLUDE "uart.inc"
+ifdef CAMEL_FREERTOS
+    XREF camel_putc, camel_getc, camel_kbhit, _camel_task_delete
+putc EQU camel_putc
+getc EQU camel_getc
+kbhit EQU camel_kbhit
+else
+    .INCLUDE "console.inc"
+    .INCLUDE "uart.inc"
+endif
 	.list on
 	.INCLUDE "CAMLF91.INC"
 	
+ifdef CAMEL_FREERTOS
+    SEGMENT CODE
+    .ASSUME ADL=1
+link .SET 0
+    XDEF _camel_entry
+_camel_entry:
+    LD IX,ENDOFMEM
+    LD IY,user0
+else
 	xref	init_bsp
 	
 	SEGMENT TEXT
@@ -53,6 +69,7 @@ _main:			call	init_bsp
 	ld iy,camel_uart0cfg
 	call init_uart0
 	
+endif ; CAMEL_FREERTOS
     ;forth program ENTRY POINT
 	xdef ENTRY
 ENTRY: ;reset:
@@ -225,8 +242,12 @@ $$:     next
 
 ;X BYE     i*x --    return to CP/M
     head BYE,{"bye"},docode
+ifdef CAMEL_FREERTOS
+        jp _camel_task_delete
+else
         HALT
-        jp 		0
+        jp 0
+endif
 
 ; STACK OPERATIONS ==============================
 
